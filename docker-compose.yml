@@ -1,0 +1,75 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: engineer4me-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: engineer4me
+      POSTGRES_USER: engineer4me
+      POSTGRES_PASSWORD: engineer4me
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U engineer4me"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: engineer4me-redis
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis_data:/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: engineer4me-minio
+    restart: unless-stopped
+
+    command: server /data --console-address ":9001"
+
+    environment:
+      MINIO_ROOT_USER: engineer4me
+      MINIO_ROOT_PASSWORD: engineer4me123
+
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+    volumes:
+      - minio_data:/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: engineer4me-pgadmin
+    restart: unless-stopped
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@engineer4me.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+
+    ports:
+      - "5050:80"
+
+    depends_on:
+      - postgres
+
+volumes:
+
+  postgres_data:
+
+  redis_data:
+
+  minio_data:
