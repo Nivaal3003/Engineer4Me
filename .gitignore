@@ -49,3 +49,8 @@ backend/alembic/versions/__pycache__/
 # Python cache
 **/__pycache__/
 *.py[cod]
+
+# Local database backups
+backups/
+*.sql
+*.dump
