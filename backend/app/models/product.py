@@ -5,6 +5,7 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
+from app.models.product_protocol import product_protocols
 
 
 class Product(Base):
@@ -68,5 +69,11 @@ class Product(Base):
 
     technology = relationship(
         "Technology",
+        back_populates="products",
+    )
+
+    protocols = relationship(
+        "Protocol",
+        secondary=product_protocols,
         back_populates="products",
     )
