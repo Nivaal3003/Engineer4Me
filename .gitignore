@@ -47,5 +47,5 @@ backend/alembic/__pycache__/
 backend/alembic/versions/__pycache__/
 
 # Python cache
-backend/app/**/__pycache__/
-*.pyc
+**/__pycache__/
+*.py[cod]

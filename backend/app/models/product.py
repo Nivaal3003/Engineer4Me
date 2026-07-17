@@ -32,6 +32,11 @@ class Product(Base):
         nullable=False,
     )
 
+    technology_id: Mapped[int | None] = mapped_column(
+        ForeignKey("technologies.id"),
+        nullable=True,
+    )
+
     model: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
@@ -61,7 +66,7 @@ class Product(Base):
         back_populates="products",
     )
 
-    faults = relationship(
-        "Fault",
-        back_populates="product",
+    technology = relationship(
+        "Technology",
+        back_populates="products",
     )
