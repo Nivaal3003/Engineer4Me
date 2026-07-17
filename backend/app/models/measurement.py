@@ -9,7 +9,9 @@ from app.db.database import Base
 class Measurement(Base):
     __tablename__ = "measurements"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+    )
 
     name: Mapped[str] = mapped_column(
         String(100),
@@ -17,9 +19,12 @@ class Measurement(Base):
         nullable=False,
     )
 
-    description: Mapped[str | None] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
 
-products = relationship(
-    "Product",
-    back_populates="measurement"
-)
+    products = relationship(
+        "Product",
+        back_populates="measurement",
+    )
