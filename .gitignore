@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+backend/.env
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+
+# PostgreSQL
+*.db
+
+# Docker
+docker-data/
+
+# Alembic cache
+backend/alembic/__pycache__/
+backend/alembic/versions/__pycache__/
+
+# Python cache
+backend/app/**/__pycache__/
+*.pyc
