@@ -15,17 +15,25 @@ class Manufacturer(Base):
         String(100),
         unique=True,
         nullable=False,
+        index=True,
     )
 
-    website: Mapped[str | None] = mapped_column(String(255))
+    website: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
 
-    country: Mapped[str | None] = mapped_column(String(100))
+    country: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
 
     products = relationship(
         "Product",
-        back_populates="manufacturer"
+        back_populates="manufacturer",
     )
+
     families = relationship(
-    "ProductFamily",
-    back_populates="manufacturer"
-)
+        "ProductFamily",
+        back_populates="manufacturer",
+    )
