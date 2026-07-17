@@ -2,12 +2,13 @@ from fastapi import FastAPI
 
 from app.api.manufacturers import router as manufacturer_router
 from app.api.measurements import router as measurement_router
+from app.api.product_families import router as product_family_router
 from app.api.protocol import router as protocol_router
 
 
 app = FastAPI(
     title="Engineer4Me API",
-    version="0.2.0",
+    version="0.3.0",
     description=(
         "Vendor-neutral engineering knowledge platform "
         "for process instrumentation."
@@ -23,7 +24,7 @@ def root() -> dict[str, str]:
     return {
         "application": "Engineer4Me",
         "status": "running",
-        "version": "0.2.0",
+        "version": "0.3.0",
     }
 
 
@@ -49,5 +50,10 @@ app.include_router(
 
 app.include_router(
     protocol_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    product_family_router,
     prefix="/api/v1",
 )
