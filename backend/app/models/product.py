@@ -11,7 +11,9 @@ from app.models.product_protocol import product_protocols
 class Product(Base):
     __tablename__ = "products"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+    )
 
     manufacturer_id: Mapped[int] = mapped_column(
         ForeignKey("manufacturers.id"),
@@ -44,7 +46,8 @@ class Product(Base):
     )
 
     description: Mapped[str | None] = mapped_column(
-        String(255)
+        String(255),
+        nullable=True,
     )
 
     manufacturer = relationship(
