@@ -58,3 +58,13 @@ backups/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.class
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
