@@ -7,11 +7,13 @@ from app.engineering.engineering_recommendation_engine import (
 )
 from app.engineering.recommendation_models import (
     EngineeringRequirements,
+    ProductEvaluation,
     RecommendationStatus,
     RequirementImportance,
     RuleCategory,
     RuleEvaluation,
     RuleStatus,
+    SafetyFinding,
     SafetySeverity,
 )
 
@@ -67,6 +69,31 @@ def build_rule(
         explanation="Test engineering explanation.",
         score_awarded=score_awarded,
         maximum_score=maximum_score,
+    )
+
+
+def build_evaluation(
+    *,
+    product_id: int,
+    status: RecommendationStatus,
+    suitability_score: float,
+    confidence_score: float,
+    manufacturer_name: str = "Example Instruments",
+    product_name: str = "Pressure Transmitter",
+    model_number: str = "PT-1000",
+    preferred_rules_failed: int = 0,
+) -> ProductEvaluation:
+    """Create a reusable product evaluation for ranking tests."""
+
+    return ProductEvaluation(
+        product_id=product_id,
+        manufacturer_name=manufacturer_name,
+        product_name=product_name,
+        model_number=model_number,
+        status=status,
+        suitability_score=suitability_score,
+        confidence_score=confidence_score,
+        preferred_rules_failed=preferred_rules_failed,
     )
 
 
@@ -387,3 +414,400 @@ def test_evaluate_product_reports_insufficient_information() -> None:
     )
     assert "process pressure limits" in evaluation.missing_information
     assert evaluation.confidence_score < 100.0
+
+
+def test_evaluate_products_returns_one_evaluation_per_product() -> None:
+    requirements = EngineeringRequirements(
+        process_pressure_bar=20.0,
+    )
+    products = [
+        build_product(id=1, model="PT-1000", model_number="PT-1000"),
+        build_product(id=2, model="PT-2000", model_number="PT-2000"),
+        build_product(id=3, model="PT-3000", model_number="PT-3000"),
+    ]
+
+    evaluations = EngineeringRecommendationEngine.evaluate_products(
+        products,
+        requirements,
+    )
+
+    assert len(evaluations) == 3
+    assert [evaluation.product_id for evaluation in evaluations] == [
+        1,
+        2,
+        3,
+    ]
+
+
+def test_rank_products_excludes_not_recommended_products() -> None:
+    evaluations = [
+        build_evaluation(
+            product_id=1,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=90.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=2,
+            status=RecommendationStatus.NOT_RECOMMENDED,
+            suitability_score=95.0,
+            confidence_score=100.0,
+        ),
+    ]
+
+    recommendations = EngineeringRecommendationEngine.rank_products(
+        evaluations
+    )
+
+    assert len(recommendations) == 1
+    assert recommendations[0].evaluation.product_id == 1
+
+
+def test_rank_products_excludes_insufficient_information_products() -> None:
+    evaluations = [
+        build_evaluation(
+            product_id=1,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=90.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=2,
+            status=RecommendationStatus.INSUFFICIENT_INFORMATION,
+            suitability_score=100.0,
+            confidence_score=40.0,
+        ),
+    ]
+
+    recommendations = EngineeringRecommendationEngine.rank_products(
+        evaluations
+    )
+
+    assert len(recommendations) == 1
+    assert recommendations[0].evaluation.product_id == 1
+
+
+def test_rank_products_places_recommended_before_conditional() -> None:
+    evaluations = [
+        build_evaluation(
+            product_id=1,
+            status=RecommendationStatus.CONDITIONALLY_RECOMMENDED,
+            suitability_score=100.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=2,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=80.0,
+            confidence_score=80.0,
+        ),
+    ]
+
+    recommendations = EngineeringRecommendationEngine.rank_products(
+        evaluations
+    )
+
+    assert recommendations[0].evaluation.product_id == 2
+    assert recommendations[1].evaluation.product_id == 1
+
+
+def test_rank_products_uses_suitability_before_confidence() -> None:
+    evaluations = [
+        build_evaluation(
+            product_id=1,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=90.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=2,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=95.0,
+            confidence_score=80.0,
+        ),
+    ]
+
+    recommendations = EngineeringRecommendationEngine.rank_products(
+        evaluations
+    )
+
+    assert recommendations[0].evaluation.product_id == 2
+    assert recommendations[1].evaluation.product_id == 1
+
+
+def test_rank_products_uses_confidence_as_secondary_sort() -> None:
+    evaluations = [
+        build_evaluation(
+            product_id=1,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=90.0,
+            confidence_score=80.0,
+        ),
+        build_evaluation(
+            product_id=2,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=90.0,
+            confidence_score=100.0,
+        ),
+    ]
+
+    recommendations = EngineeringRecommendationEngine.rank_products(
+        evaluations
+    )
+
+    assert recommendations[0].evaluation.product_id == 2
+    assert recommendations[1].evaluation.product_id == 1
+
+
+def test_rank_products_assigns_sequential_rank_numbers() -> None:
+    evaluations = [
+        build_evaluation(
+            product_id=1,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=90.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=2,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=80.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=3,
+            status=RecommendationStatus.CONDITIONALLY_RECOMMENDED,
+            suitability_score=70.0,
+            confidence_score=100.0,
+        ),
+    ]
+
+    recommendations = EngineeringRecommendationEngine.rank_products(
+        evaluations
+    )
+
+    assert [item.rank for item in recommendations] == [1, 2, 3]
+
+
+def test_build_summary_counts_all_statuses() -> None:
+    evaluations = [
+        build_evaluation(
+            product_id=1,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=100.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=2,
+            status=RecommendationStatus.CONDITIONALLY_RECOMMENDED,
+            suitability_score=80.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=3,
+            status=RecommendationStatus.NOT_RECOMMENDED,
+            suitability_score=0.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=4,
+            status=RecommendationStatus.INSUFFICIENT_INFORMATION,
+            suitability_score=0.0,
+            confidence_score=50.0,
+        ),
+    ]
+
+    summary = EngineeringRecommendationEngine.build_summary(evaluations)
+
+    assert summary.products_evaluated == 4
+    assert summary.products_recommended == 1
+    assert summary.products_conditionally_recommended == 1
+    assert summary.products_not_recommended == 1
+    assert summary.products_with_insufficient_information == 1
+
+
+def test_collect_excluded_products_returns_only_ineligible_products() -> None:
+    evaluations = [
+        build_evaluation(
+            product_id=1,
+            status=RecommendationStatus.RECOMMENDED,
+            suitability_score=100.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=2,
+            status=RecommendationStatus.CONDITIONALLY_RECOMMENDED,
+            suitability_score=80.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=3,
+            status=RecommendationStatus.NOT_RECOMMENDED,
+            suitability_score=0.0,
+            confidence_score=100.0,
+        ),
+        build_evaluation(
+            product_id=4,
+            status=RecommendationStatus.INSUFFICIENT_INFORMATION,
+            suitability_score=0.0,
+            confidence_score=50.0,
+        ),
+    ]
+
+    excluded = EngineeringRecommendationEngine.collect_excluded_products(
+        evaluations
+    )
+
+    assert [evaluation.product_id for evaluation in excluded] == [3, 4]
+
+
+def test_collect_missing_request_information_identifies_missing_fields() -> None:
+    requirements = EngineeringRequirements()
+
+    missing = (
+        EngineeringRecommendationEngine.collect_missing_request_information(
+            requirements
+        )
+    )
+
+    assert "measurement type" in missing
+    assert "process temperature" in missing
+    assert "process pressure" in missing
+    assert "ambient temperature" in missing
+    assert "required accuracy" in missing
+    assert "process medium" in missing
+    assert "required wetted materials" in missing
+    assert "required process connection" in missing
+    assert "required communication protocol" in missing
+
+
+def test_hazardous_area_request_adds_general_safety_finding() -> None:
+    requirements = EngineeringRequirements(
+        hazardous_area_required=True,
+        required_hazardous_area_approvals=["ATEX"],
+    )
+
+    findings = (
+        EngineeringRecommendationEngine.build_general_safety_findings(
+            requirements
+        )
+    )
+
+    assert any(
+        finding.code
+        == "GENERAL_HAZARDOUS_AREA_VERIFICATION_REQUIRED"
+        for finding in findings
+    )
+    assert any(
+        finding.severity == SafetySeverity.CRITICAL
+        for finding in findings
+    )
+
+
+def test_process_medium_adds_compatibility_safety_finding() -> None:
+    requirements = EngineeringRequirements(
+        process_medium="Sulphuric acid",
+    )
+
+    findings = (
+        EngineeringRecommendationEngine.build_general_safety_findings(
+            requirements
+        )
+    )
+
+    assert any(
+        finding.code
+        == "GENERAL_PROCESS_COMPATIBILITY_VERIFICATION_REQUIRED"
+        for finding in findings
+    )
+
+
+def test_recommend_products_returns_complete_response() -> None:
+    requirements = EngineeringRequirements(
+        measurement_type="Pressure",
+        process_temperature_c=100.0,
+        process_pressure_bar=20.0,
+        ambient_temperature_c=40.0,
+        required_accuracy_percent=0.25,
+        required_ingress_protection_rating="IP65",
+        hazardous_area_required=True,
+        required_hazardous_area_approvals=["ATEX"],
+        process_medium="Water",
+        required_wetted_materials=["316L Stainless Steel"],
+        required_process_connections=["1/2 NPT"],
+        required_protocols=["HART"],
+        installation_environment=["Outdoor"],
+    )
+
+    products = [
+        build_product(
+            id=1,
+            model="PT-1000",
+            model_number="PT-1000",
+        ),
+        build_product(
+            id=2,
+            model="PT-2000",
+            model_number="PT-2000",
+            maximum_process_pressure_bar=10.0,
+        ),
+        build_product(
+            id=3,
+            model="PT-3000",
+            model_number="PT-3000",
+            maximum_process_pressure_bar=None,
+            minimum_process_pressure_bar=None,
+        ),
+    ]
+
+    response = EngineeringRecommendationEngine.recommend_products(
+        products,
+        requirements,
+    )
+
+    assert response.summary.products_evaluated == 3
+    assert response.summary.products_recommended == 1
+    assert response.summary.products_not_recommended == 1
+    assert (
+        response.summary.products_with_insufficient_information
+        == 1
+    )
+
+    assert len(response.recommendations) == 1
+    assert response.recommendations[0].rank == 1
+    assert response.recommendations[0].evaluation.product_id == 1
+
+    assert len(response.excluded_products) == 2
+    assert {
+        evaluation.product_id
+        for evaluation in response.excluded_products
+    } == {2, 3}
+
+    assert response.missing_request_information == []
+
+    assert any(
+        finding.code
+        == "GENERAL_ENGINEERING_VERIFICATION_REQUIRED"
+        for finding in response.general_safety_findings
+    )
+
+    assert any(
+        finding.code
+        == "GENERAL_HAZARDOUS_AREA_VERIFICATION_REQUIRED"
+        for finding in response.general_safety_findings
+    )
+
+
+def test_recommend_products_handles_empty_catalogue() -> None:
+    requirements = EngineeringRequirements()
+
+    response = EngineeringRecommendationEngine.recommend_products(
+        [],
+        requirements,
+    )
+
+    assert response.summary.products_evaluated == 0
+    assert response.summary.products_recommended == 0
+    assert response.recommendations == []
+    assert response.excluded_products == []
+    assert response.general_safety_findings
+    assert response.missing_request_information
