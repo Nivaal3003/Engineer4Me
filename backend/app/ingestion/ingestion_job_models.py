@@ -1,4 +1,4 @@
-"""Ingestion job and progress models for Engineer4Me.
+﻿"""Ingestion job and progress models for Engineer4Me.
 
 These models provide the shared contract used by future ingestion services,
 background workers, repositories, and REST API endpoints.
@@ -120,9 +120,13 @@ class IngestionSourceType(StrEnum):
 class IngestionDiagnostic(EngineeringBaseModel):
     """Warning or error produced during ingestion."""
 
-    code: str = Field(min_length=1, max_length=100)
+    code: str = Field(
+        default="UNSPECIFIED",
+        min_length=1,
+        max_length=100,
+    )
     message: str = Field(min_length=1, max_length=2_000)
-    stage: IngestionStage
+    stage: IngestionStage = IngestionStage.VALIDATING
     failure_category: IngestionFailureCategory | None = None
     document_id: UUID | None = None
     recoverable: bool = False
@@ -484,7 +488,7 @@ class IngestionJobSummary(EngineeringBaseModel):
     job_type: IngestionJobType
     source_type: IngestionSourceType
     status: IngestionJobStatus
-    stage: IngestionStage
+    stage: IngestionStage = IngestionStage.VALIDATING
     submitted_by: str
     progress_percent: int = Field(ge=0, le=100)
     total_document_count: int = Field(ge=0)
