@@ -567,7 +567,6 @@ class IngestionJobService:
             }
 
             if diagnostics is not None:
-                updates["warnings"] = []
                 updates["errors"] = list(diagnostics)
             if metadata is not None:
                 updates["attributes"] = metadata
@@ -1023,6 +1022,10 @@ class IngestionJobService:
                 documents,
                 IngestionDocumentStatus.FAILED,
             ),
+            "cancelled_document_count": self._count_documents(
+                documents,
+                IngestionDocumentStatus.CANCELLED,
+            ),
             "warning_count": sum(
                 len(document.warnings)
                 for document in documents
@@ -1083,6 +1086,10 @@ class IngestionJobService:
             failed_document_count=self._count_documents(
                 documents,
                 IngestionDocumentStatus.FAILED,
+            ),
+            cancelled_document_count=self._count_documents(
+                documents,
+                IngestionDocumentStatus.CANCELLED,
             ),
             completed_at=cancelled_at,
             updated_at=cancelled_at,
