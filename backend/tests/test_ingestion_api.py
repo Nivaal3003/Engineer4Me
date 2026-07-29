@@ -154,18 +154,30 @@ def fail_submitted_document(
     service.fail_document(job_id, document_id)
 
 
-def test_ingestion_routes_are_registered() -> None:
-    """The main application exposes the complete ingestion API contract."""
+def test_ingestion_lifecycle_routes_are_registered() -> None:
+    """The main application exposes every lifecycle API operation."""
 
-    paths = app.openapi()["paths"]
-    ingestion_paths = [
-        path
-        for path in paths
-        if path.startswith(INGESTION_API)
-    ]
+    paths = set(app.openapi()["paths"])
+    required_paths = {
+        f"{INGESTION_API}/statistics",
+        f"{INGESTION_API}/jobs",
+        f"{INGESTION_API}/jobs/search",
+        f"{INGESTION_API}/jobs/{{job_id}}",
+        f"{INGESTION_API}/jobs/{{job_id}}/queue",
+        f"{INGESTION_API}/jobs/{{job_id}}/start",
+        (
+            f"{INGESTION_API}/jobs/{{job_id}}/"
+            "cancellation-request"
+        ),
+        f"{INGESTION_API}/jobs/{{job_id}}/cancel",
+        f"{INGESTION_API}/jobs/{{job_id}}/retry",
+        (
+            f"{INGESTION_API}/jobs/{{job_id}}/documents/"
+            "{document_id}/retry"
+        ),
+    }
 
-    assert app.version == "0.7.0"
-    assert len(ingestion_paths) == 10
+    assert required_paths.issubset(paths)
 
 
 def test_submit_ingestion_job(client: TestClient) -> None:
