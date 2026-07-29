@@ -1,10 +1,10 @@
 """Runtime composition for filesystem-backed document processing.
 
 This module connects the shared ingestion-job lifecycle service to the guarded
-filesystem content loader and the deterministic document-processing
-orchestrator.  It is transport-neutral: an API route, queue consumer, or
-background worker can invoke the same runtime without duplicating pipeline
-wiring.
+filesystem content loader, the complete PDF/Office/OCR-aware parser chain, and
+the deterministic document-processing orchestrator. It is transport-neutral:
+an API route, queue consumer, or background worker can invoke the same runtime
+without duplicating pipeline wiring.
 """
 
 from __future__ import annotations
@@ -22,6 +22,10 @@ from app.ingestion.filesystem_document_content_loader import (
 )
 from app.ingestion.ingestion_job_models import IngestionJob
 from app.ingestion.ingestion_job_service import IngestionJobService
+from app.ingestion.pdf_office_document_parser import (
+    PdfOfficeDocumentParser,
+    PdfOfficeDocumentParserConfig,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +35,9 @@ class FilesystemDocumentProcessingRuntimeConfig:
     content_loader_config: FilesystemDocumentContentLoaderConfig
     orchestrator: DocumentProcessingOrchestratorConfig = field(
         default_factory=DocumentProcessingOrchestratorConfig,
+    )
+    document_parser: PdfOfficeDocumentParserConfig = field(
+        default_factory=PdfOfficeDocumentParserConfig,
     )
 
     def __post_init__(self) -> None:
@@ -54,6 +61,15 @@ class FilesystemDocumentProcessingRuntimeConfig:
                 "DocumentProcessingOrchestratorConfig."
             )
 
+        if not isinstance(
+            self.document_parser,
+            PdfOfficeDocumentParserConfig,
+        ):
+            raise TypeError(
+                "document_parser must be a "
+                "PdfOfficeDocumentParserConfig."
+            )
+
 
 class FilesystemDocumentProcessingRuntime:
     """Run ingestion jobs through one fully composed synchronous pipeline."""
@@ -64,7 +80,7 @@ class FilesystemDocumentProcessingRuntime:
         job_service: IngestionJobService,
         config: FilesystemDocumentProcessingRuntimeConfig,
     ) -> None:
-        """Build the concrete loader and orchestrator once for reuse."""
+        """Build concrete loader, parser, and orchestrator once for reuse."""
 
         if not isinstance(job_service, IngestionJobService):
             raise TypeError(
@@ -83,13 +99,18 @@ class FilesystemDocumentProcessingRuntime:
         content_loader = FilesystemDocumentContentLoader(
             config.content_loader_config,
         )
+        document_parser = PdfOfficeDocumentParser(
+            config.document_parser,
+        )
 
         self._job_service = job_service
         self._config = config
         self._content_loader = content_loader
+        self._document_parser = document_parser
         self._orchestrator = DocumentProcessingOrchestrator(
             job_service=job_service,
             content_loader=content_loader,
+            parser=document_parser,
             config=config.orchestrator,
         )
 
@@ -112,6 +133,12 @@ class FilesystemDocumentProcessingRuntime:
         return self._content_loader
 
     @property
+    def document_parser(self) -> PdfOfficeDocumentParser:
+        """Return the complete parser chain used by this runtime."""
+
+        return self._document_parser
+
+    @property
     def orchestrator(self) -> DocumentProcessingOrchestrator:
         """Return the composed document-processing orchestrator."""
 
@@ -127,7 +154,7 @@ class FilesystemDocumentProcessingRuntime:
         job_id: UUID,
         document_id: UUID,
     ) -> IngestionJob:
-        """Process one document while leaving job finalisation to its caller."""
+        """Process one document without finalising its containing job."""
 
         return self._orchestrator.process_document(
             job_id,
