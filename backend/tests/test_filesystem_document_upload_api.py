@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import os
@@ -13,16 +14,22 @@ from typing import Any
 from uuid import UUID
 
 import pytest
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.testclient import TestClient
 
 from app.api.filesystem_document_upload_api import (
+    BoundedUploadRequestRoute,
     DocumentUploadRequestError,
     FilesystemDocumentUploadApiConfig,
     FilesystemDocumentUploadApiConfigurationError,
+    _BoundedRequestReceive,
+    _InvalidContentLengthError,
+    _RequestBodyTooLargeError,
     _decode_document_attributes,
     _decode_json_mapping,
+    _exception_chain_contains_request_limit,
     _prepare_storage_root,
+    _read_declared_content_length,
     _read_environment_integer,
     get_filesystem_document_storage,
     get_filesystem_document_storage_dependency,
@@ -62,6 +69,147 @@ from app.ingestion.ingestion_job_service import IngestionJobService
 
 UPLOAD_API = "/api/v1/ingestion/uploads"
 INGESTION_API = "/api/v1/ingestion"
+MAXIMUM_REQUEST_BYTES_ENVIRONMENT_VARIABLE = (
+    "ENGINEER4ME_UPLOAD_MAXIMUM_REQUEST_BYTES"
+)
+
+
+def _request_with_headers(
+    *headers: tuple[bytes, bytes],
+) -> Request:
+    """Build one minimal HTTP request for strict header parsing tests."""
+
+    return Request(
+        {
+            "type": "http",
+            "headers": list(headers),
+        }
+    )
+
+
+def _multipart_upload_body(
+    content: bytes = b"phase-six-pdf",
+) -> tuple[bytes, bytes]:
+    """Build one deterministic valid multipart upload body."""
+
+    boundary = b"engineer4me-request-limit"
+    body = b"".join(
+        (
+            b"--" + boundary + b"\r\n",
+            (
+                b'Content-Disposition: form-data; name="files"; '
+                b'filename="motor-manual.pdf"\r\n'
+            ),
+            b"Content-Type: application/pdf\r\n",
+            b"\r\n",
+            content,
+            b"\r\n",
+            b"--" + boundary + b"\r\n",
+            (
+                b'Content-Disposition: form-data; '
+                b'name="submitted_by"\r\n'
+            ),
+            b"\r\n",
+            b"request-limit-test",
+            b"\r\n",
+            b"--" + boundary + b"--\r\n",
+        )
+    )
+    content_type = (
+        b"multipart/form-data; boundary=" + boundary
+    )
+    return body, content_type
+
+
+def _invoke_upload_asgi(
+    application: FastAPI,
+    *,
+    body_chunks: tuple[bytes, ...],
+    extra_headers: tuple[tuple[bytes, bytes], ...] = (),
+) -> tuple[int, bytes]:
+    """Invoke the upload endpoint with exact raw ASGI body chunks."""
+
+    if not body_chunks:
+        raise ValueError("body_chunks must contain at least one chunk.")
+
+    async def invoke() -> tuple[int, bytes]:
+        request_messages = [
+            {
+                "type": "http.request",
+                "body": chunk,
+                "more_body": index < len(body_chunks) - 1,
+            }
+            for index, chunk in enumerate(body_chunks)
+        ]
+        request_index = 0
+        response_messages: list[dict[str, Any]] = []
+
+        async def receive() -> dict[str, Any]:
+            nonlocal request_index
+
+            if request_index >= len(request_messages):
+                return {"type": "http.disconnect"}
+
+            message = request_messages[request_index]
+            request_index += 1
+            return message
+
+        async def send(message: dict[str, Any]) -> None:
+            response_messages.append(message)
+
+        scope: dict[str, Any] = {
+            "type": "http",
+            "asgi": {"version": "3.0"},
+            "http_version": "1.1",
+            "method": "POST",
+            "scheme": "http",
+            "path": UPLOAD_API,
+            "raw_path": UPLOAD_API.encode("ascii"),
+            "root_path": "",
+            "query_string": b"",
+            "headers": [
+                (b"host", b"testserver"),
+                *extra_headers,
+            ],
+            "client": ("testclient", 50000),
+            "server": ("testserver", 80),
+            "state": {},
+        }
+
+        await application(scope, receive, send)
+
+        start_messages = [
+            message
+            for message in response_messages
+            if message["type"] == "http.response.start"
+        ]
+
+        if len(start_messages) != 1:
+            raise AssertionError(
+                "ASGI response must contain exactly one start message."
+            )
+
+        response_body = b"".join(
+            message.get("body", b"")
+            for message in response_messages
+            if message["type"] == "http.response.body"
+        )
+        return int(start_messages[0]["status"]), response_body
+
+    return asyncio.run(invoke())
+
+
+def _configure_request_limit(
+    monkeypatch: pytest.MonkeyPatch,
+    maximum_request_bytes: int,
+) -> None:
+    """Install one uncached aggregate request limit for a route test."""
+
+    monkeypatch.setenv(
+        MAXIMUM_REQUEST_BYTES_ENVIRONMENT_VARIABLE,
+        str(maximum_request_bytes),
+    )
+    get_filesystem_document_upload_api_config.cache_clear()
 
 
 @pytest.fixture(autouse=True)
@@ -833,6 +981,10 @@ def test_unexpected_programmer_error_is_not_disguised_as_422() -> None:
         ("maximum_content_bytes", True, TypeError),
         ("maximum_content_bytes", "64", TypeError),
         ("maximum_content_bytes", 0, ValueError),
+        ("maximum_request_bytes", True, TypeError),
+        ("maximum_request_bytes", "128", TypeError),
+        ("maximum_request_bytes", 0, ValueError),
+        ("maximum_request_bytes", 512 * 1024 * 1024 + 1, ValueError),
         ("read_chunk_bytes", True, TypeError),
         ("read_chunk_bytes", 0, ValueError),
         ("read_chunk_bytes", 65, ValueError),
@@ -887,6 +1039,7 @@ def test_environment_defaults_are_complete() -> None:
         "/var/lib/engineer4me/uploads"
     )
     assert config.maximum_content_bytes == 25 * 1024 * 1024
+    assert config.maximum_request_bytes == 128 * 1024 * 1024
     assert config.read_chunk_bytes == 64 * 1024
     assert config.maximum_documents_per_job == 20
     assert config.default_maximum_attempts == 3
@@ -901,6 +1054,7 @@ def test_environment_overrides_are_parsed_strictly(
         {
             "ENGINEER4ME_UPLOAD_ROOT": str(tmp_path / "root"),
             "ENGINEER4ME_UPLOAD_MAXIMUM_CONTENT_BYTES": "4096",
+            "ENGINEER4ME_UPLOAD_MAXIMUM_REQUEST_BYTES": "8192",
             "ENGINEER4ME_UPLOAD_READ_CHUNK_BYTES": "512",
             "ENGINEER4ME_UPLOAD_MAXIMUM_DOCUMENTS_PER_JOB": "7",
             "ENGINEER4ME_UPLOAD_DEFAULT_MAXIMUM_ATTEMPTS": "6",
@@ -909,6 +1063,7 @@ def test_environment_overrides_are_parsed_strictly(
 
     assert config.storage_root_directory == tmp_path / "root"
     assert config.maximum_content_bytes == 4096
+    assert config.maximum_request_bytes == 8192
     assert config.read_chunk_bytes == 512
     assert config.maximum_documents_per_job == 7
     assert config.default_maximum_attempts == 6
@@ -924,6 +1079,15 @@ def test_environment_overrides_are_parsed_strictly(
         {"ENGINEER4ME_UPLOAD_MAXIMUM_CONTENT_BYTES": "abc"},
         {"ENGINEER4ME_UPLOAD_MAXIMUM_CONTENT_BYTES": "0"},
         {"ENGINEER4ME_UPLOAD_MAXIMUM_CONTENT_BYTES": 64},
+        {"ENGINEER4ME_UPLOAD_MAXIMUM_REQUEST_BYTES": ""},
+        {"ENGINEER4ME_UPLOAD_MAXIMUM_REQUEST_BYTES": "abc"},
+        {"ENGINEER4ME_UPLOAD_MAXIMUM_REQUEST_BYTES": "0"},
+        {
+            "ENGINEER4ME_UPLOAD_MAXIMUM_REQUEST_BYTES": (
+                str(512 * 1024 * 1024 + 1)
+            )
+        },
+        {"ENGINEER4ME_UPLOAD_MAXIMUM_REQUEST_BYTES": 128},
         {"ENGINEER4ME_UPLOAD_READ_CHUNK_BYTES": "0"},
         {"ENGINEER4ME_UPLOAD_MAXIMUM_DOCUMENTS_PER_JOB": "1001"},
         {"ENGINEER4ME_UPLOAD_DEFAULT_MAXIMUM_ATTEMPTS": "21"},
@@ -1202,6 +1366,7 @@ def test_upload_route_openapi_contract(app: FastAPI) -> None:
     assert "multipart/form-data" in operation["requestBody"]["content"]
     assert set(operation["responses"]) >= {
         "201",
+        "400",
         "413",
         "422",
         "500",
@@ -1221,3 +1386,440 @@ def test_router_contains_only_upload_endpoint() -> None:
 
     assert route_paths == ["/ingestion/uploads"]
     assert upload_router.routes[0].methods == {"POST"}
+    assert isinstance(
+        upload_router.routes[0],
+        BoundedUploadRequestRoute,
+    )
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        (None, None),
+        (b"0", 0),
+        (b"0012", 12),
+        (b" 42 ", 42),
+    ],
+)
+def test_declared_content_length_accepts_strict_decimal_values(
+    raw_value: bytes | None,
+    expected: int | None,
+) -> None:
+    """Absent and strict decimal length headers are parsed predictably."""
+
+    headers = (
+        ()
+        if raw_value is None
+        else ((b"content-length", raw_value),)
+    )
+
+    assert (
+        _read_declared_content_length(
+            _request_with_headers(*headers)
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    "raw_value",
+    [
+        b"",
+        b"-1",
+        b"+1",
+        b"1.0",
+        b"1, 1",
+        b"9" * 21,
+        b"\xff",
+    ],
+)
+def test_declared_content_length_rejects_malformed_values(
+    raw_value: bytes,
+) -> None:
+    """Malformed, ambiguous, or oversized numeric headers fail closed."""
+
+    request = _request_with_headers(
+        (b"content-length", raw_value),
+    )
+
+    with pytest.raises(_InvalidContentLengthError):
+        _read_declared_content_length(request)
+
+
+def test_declared_content_length_rejects_duplicate_headers() -> None:
+    """Multiple length fields are rejected even when values agree."""
+
+    request = _request_with_headers(
+        (b"content-length", b"12"),
+        (b"content-length", b"12"),
+    )
+
+    with pytest.raises(_InvalidContentLengthError):
+        _read_declared_content_length(request)
+
+
+def test_bounded_receive_accepts_exact_limit_across_chunks() -> None:
+    """Raw chunks totalling exactly the configured budget are accepted."""
+
+    async def exercise() -> None:
+        messages = iter(
+            (
+                {
+                    "type": "http.request",
+                    "body": b"abc",
+                    "more_body": True,
+                },
+                {
+                    "type": "http.request",
+                    "body": b"de",
+                    "more_body": False,
+                },
+            )
+        )
+
+        async def receive() -> dict[str, Any]:
+            return next(messages)
+
+        bounded = _BoundedRequestReceive(
+            receive,
+            maximum_bytes=5,
+        )
+
+        assert bounded.maximum_bytes == 5
+        assert bounded.received_bytes == 0
+        assert (await bounded())["body"] == b"abc"
+        assert bounded.received_bytes == 3
+        assert (await bounded())["body"] == b"de"
+        assert bounded.received_bytes == 5
+
+    asyncio.run(exercise())
+
+
+def test_bounded_receive_rejects_before_oversized_chunk_escapes() -> None:
+    """The chunk crossing the budget is never returned to the parser."""
+
+    async def exercise() -> None:
+        messages = iter(
+            (
+                {
+                    "type": "http.request",
+                    "body": b"abc",
+                    "more_body": True,
+                },
+                {
+                    "type": "http.request",
+                    "body": b"def",
+                    "more_body": False,
+                },
+            )
+        )
+
+        async def receive() -> dict[str, Any]:
+            return next(messages)
+
+        bounded = _BoundedRequestReceive(
+            receive,
+            maximum_bytes=5,
+        )
+
+        assert (await bounded())["body"] == b"abc"
+
+        with pytest.raises(_RequestBodyTooLargeError):
+            await bounded()
+
+        assert bounded.received_bytes == 3
+
+    asyncio.run(exercise())
+
+
+def test_bounded_receive_passes_non_request_messages_unchanged() -> None:
+    """Disconnect and other non-body messages do not consume the budget."""
+
+    message = {"type": "http.disconnect"}
+
+    async def exercise() -> None:
+        async def receive() -> dict[str, Any]:
+            return message
+
+        bounded = _BoundedRequestReceive(
+            receive,
+            maximum_bytes=5,
+        )
+
+        assert await bounded() is message
+        assert bounded.received_bytes == 0
+
+    asyncio.run(exercise())
+
+
+def test_bounded_receive_rejects_non_bytes_body_chunks() -> None:
+    """Invalid ASGI body types remain internal protocol failures."""
+
+    async def exercise() -> None:
+        async def receive() -> dict[str, Any]:
+            return {
+                "type": "http.request",
+                "body": bytearray(b"abc"),
+                "more_body": False,
+            }
+
+        bounded = _BoundedRequestReceive(
+            receive,
+            maximum_bytes=5,
+        )
+
+        with pytest.raises(
+            RuntimeError,
+            match="body chunks must be bytes",
+        ):
+            await bounded()
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize(
+    ("maximum_bytes", "exception_type"),
+    [
+        (True, TypeError),
+        (0, ValueError),
+        (-1, ValueError),
+        (512 * 1024 * 1024 + 1, ValueError),
+    ],
+)
+def test_bounded_receive_rejects_invalid_limits(
+    maximum_bytes: Any,
+    exception_type: type[Exception],
+) -> None:
+    """The receive guard accepts only a positive bounded integer."""
+
+    async def receive() -> dict[str, Any]:
+        return {"type": "http.disconnect"}
+
+    with pytest.raises(exception_type):
+        _BoundedRequestReceive(
+            receive,
+            maximum_bytes=maximum_bytes,
+        )
+
+
+def test_request_limit_signal_is_found_directly() -> None:
+    """The private request-limit signal is recognised directly."""
+
+    error = _RequestBodyTooLargeError("private")
+
+    assert _exception_chain_contains_request_limit(error)
+
+
+def test_request_limit_signal_is_found_through_cause() -> None:
+    """FastAPI wrapping the signal as a cause preserves safe mapping."""
+
+    limit_error = _RequestBodyTooLargeError("private")
+    outer_error = RuntimeError("outer")
+    outer_error.__cause__ = limit_error
+
+    assert _exception_chain_contains_request_limit(outer_error)
+
+
+def test_request_limit_signal_is_found_through_context() -> None:
+    """Implicit exception context also preserves safe mapping."""
+
+    limit_error = _RequestBodyTooLargeError("private")
+    outer_error = RuntimeError("outer")
+    outer_error.__context__ = limit_error
+
+    assert _exception_chain_contains_request_limit(outer_error)
+
+
+def test_request_limit_chain_scan_handles_cycles() -> None:
+    """A malformed cyclic exception chain terminates and returns false."""
+
+    first = RuntimeError("first")
+    second = RuntimeError("second")
+    first.__context__ = second
+    second.__context__ = first
+
+    assert not _exception_chain_contains_request_limit(first)
+
+
+def test_declared_aggregate_over_limit_is_rejected_before_parsing(
+    app: FastAPI,
+    storage: FilesystemDocumentStorage,
+    ingestion_service: IngestionJobService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A truthful oversized length receives 413 without side effects."""
+
+    body, content_type = _multipart_upload_body()
+    _configure_request_limit(monkeypatch, len(body) - 1)
+
+    status_code, response_body = _invoke_upload_asgi(
+        app,
+        body_chunks=(body,),
+        extra_headers=(
+            (b"content-type", content_type),
+            (b"content-length", str(len(body)).encode("ascii")),
+        ),
+    )
+
+    assert status_code == 413
+    assert json.loads(response_body) == {
+        "detail": (
+            "The upload request exceeds the configured "
+            "aggregate size limit."
+        )
+    }
+    _assert_no_side_effects(storage, ingestion_service)
+
+
+def test_streamed_aggregate_over_limit_is_rejected_without_length(
+    app: FastAPI,
+    storage: FilesystemDocumentStorage,
+    ingestion_service: IngestionJobService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Chunked uploads cannot spool beyond the aggregate byte budget."""
+
+    body, content_type = _multipart_upload_body()
+    maximum_bytes = len(body) - 1
+    _configure_request_limit(monkeypatch, maximum_bytes)
+
+    status_code, response_body = _invoke_upload_asgi(
+        app,
+        body_chunks=(
+            body[:maximum_bytes],
+            body[maximum_bytes:],
+        ),
+        extra_headers=((b"content-type", content_type),),
+    )
+
+    assert status_code == 413
+    assert json.loads(response_body)["detail"] == (
+        "The upload request exceeds the configured aggregate size limit."
+    )
+    _assert_no_side_effects(storage, ingestion_service)
+
+
+def test_spoofed_small_length_cannot_bypass_streamed_limit(
+    app: FastAPI,
+    storage: FilesystemDocumentStorage,
+    ingestion_service: IngestionJobService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Actual streamed bytes remain authoritative after a small header."""
+
+    body, content_type = _multipart_upload_body()
+    maximum_bytes = len(body) - 1
+    _configure_request_limit(monkeypatch, maximum_bytes)
+
+    status_code, response_body = _invoke_upload_asgi(
+        app,
+        body_chunks=(
+            body[:maximum_bytes],
+            body[maximum_bytes:],
+        ),
+        extra_headers=(
+            (b"content-type", content_type),
+            (b"content-length", b"1"),
+        ),
+    )
+
+    assert status_code == 413
+    assert json.loads(response_body)["detail"] == (
+        "The upload request exceeds the configured aggregate size limit."
+    )
+    _assert_no_side_effects(storage, ingestion_service)
+
+
+def test_exact_aggregate_limit_is_accepted(
+    app: FastAPI,
+    storage: FilesystemDocumentStorage,
+    ingestion_service: IngestionJobService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A valid multipart body exactly equal to its budget is processed."""
+
+    content = b"phase-six-boundary"
+    body, content_type = _multipart_upload_body(content)
+    _configure_request_limit(monkeypatch, len(body))
+
+    status_code, response_body = _invoke_upload_asgi(
+        app,
+        body_chunks=(
+            body[: len(body) // 2],
+            body[len(body) // 2 :],
+        ),
+        extra_headers=(
+            (b"content-type", content_type),
+            (b"content-length", str(len(body)).encode("ascii")),
+        ),
+    )
+
+    assert status_code == 201
+    response = json.loads(response_body)
+    assert response["status"] == IngestionJobStatus.PENDING.value
+    assert response["documents"][0]["file_size_bytes"] == len(content)
+    assert ingestion_service.statistics().total_jobs == 1
+    assert len(_stored_files(storage.root_directory)) == 1
+
+
+def test_malformed_length_maps_to_safe_400_before_service(
+    app: FastAPI,
+    storage: FilesystemDocumentStorage,
+    ingestion_service: IngestionJobService,
+) -> None:
+    """Invalid length syntax is rejected without multipart side effects."""
+
+    body, content_type = _multipart_upload_body()
+
+    status_code, response_body = _invoke_upload_asgi(
+        app,
+        body_chunks=(body,),
+        extra_headers=(
+            (b"content-type", content_type),
+            (b"content-length", b"not-a-number"),
+        ),
+    )
+
+    assert status_code == 400
+    assert json.loads(response_body) == {
+        "detail": (
+            "The upload request contains an invalid "
+            "Content-Length header."
+        )
+    }
+    _assert_no_side_effects(storage, ingestion_service)
+
+
+def test_request_limit_configuration_failure_maps_to_safe_503(
+    app: FastAPI,
+    storage: FilesystemDocumentStorage,
+    ingestion_service: IngestionJobService,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Unavailable server request limits do not expose private details."""
+
+    def raise_configuration_error() -> None:
+        raise FilesystemDocumentUploadApiConfigurationError(
+            "private request-limit configuration"
+        )
+
+    monkeypatch.setattr(
+        (
+            "app.api.filesystem_document_upload_api."
+            "get_filesystem_document_upload_api_config"
+        ),
+        raise_configuration_error,
+    )
+
+    with TestClient(
+        app,
+        raise_server_exceptions=False,
+    ) as test_client:
+        response = _post_upload(test_client)
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Document upload storage is unavailable."
+    }
+    assert "private request-limit configuration" not in response.text
+    _assert_no_side_effects(storage, ingestion_service)
