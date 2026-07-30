@@ -76,6 +76,9 @@ services:
     env_file:
       - ./backend/.env
 
+    environment:
+      ENGINEER4ME_UPLOAD_ROOT: /var/lib/engineer4me/uploads
+
     ports:
       - "8000:8000"
 
@@ -87,8 +90,10 @@ services:
 
     volumes:
       - ./backend:/app
+      - document_uploads:/var/lib/engineer4me/uploads
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  document_uploads:
