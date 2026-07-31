@@ -10,6 +10,10 @@ from app.api.filesystem_document_upload_api import (
 )
 from app.api.ingestion import router as ingestion_router
 from app.api.knowledge import router as knowledge_router
+from app.api.level_applications import (
+    LevelApplicationRequestBodyLimitMiddleware,
+)
+from app.api.level_applications import router as level_application_router
 from app.api.manufacturers import router as manufacturer_router
 from app.api.measurements import router as measurement_router
 from app.api.product_families import router as product_family_router
@@ -30,6 +34,7 @@ app = FastAPI(
     ),
 )
 app.add_middleware(CalculationRequestBodyLimitMiddleware)
+app.add_middleware(LevelApplicationRequestBodyLimitMiddleware)
 
 
 @app.get(
@@ -106,5 +111,10 @@ app.include_router(
 
 app.include_router(
     calculation_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    level_application_router,
     prefix="/api/v1",
 )

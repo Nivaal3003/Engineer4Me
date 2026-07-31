@@ -27,15 +27,19 @@ from app.api.calculations import get_calculation_service
 from app.api.calculations import router
 from app.engineering.calculations.engine import CalculationEngine
 from app.engineering.calculations.engine import CalculationEvidenceError
+from app.engineering.calculations.level import ENGINEERING_METHOD_REGISTRY
 from app.engineering.calculations.method_models import (
     CalculationMethodDefinition,
 )
 from app.engineering.calculations.method_models import EngineCompatibility
 from app.engineering.calculations.method_models import MethodExecutionContext
 from app.engineering.calculations.method_models import MethodExecutionOutcome
+from app.engineering.calculations.models import CalculationInput
 from app.engineering.calculations.models import CalculationRequest
 from app.engineering.calculations.models import CalculationResult
 from app.engineering.calculations.models import CalculationStatus
+from app.engineering.calculations.models import EngineeringQuantity
+from app.engineering.calculations.models import InputOrigin
 from app.engineering.calculations.models import MethodLifecycleStatus
 from app.engineering.calculations.models import MissingCalculationInput
 from app.engineering.calculations.registry import InvalidMethodLookupError
@@ -47,6 +51,7 @@ from app.engineering.calculations.registry import (
 from app.engineering.calculations.registry import UnknownMethodError
 from app.engineering.calculations.registry import UnknownMethodVersionError
 from app.engineering.calculations.registry import MethodRegistration
+from app.engineering.calculations.units import QuantityKind
 from app.main import app
 from app.main import root
 from app.services.calculation_service import CalculationEvidenceResolutionError
@@ -58,6 +63,9 @@ METHODS_PATH = "/api/v1/calculations/methods"
 VERSIONS_PATH = "/api/v1/calculations/methods/versions"
 DEFINITION_PATH = "/api/v1/calculations/methods/definition"
 EXECUTE_PATH = "/api/v1/calculations/execute"
+LEVEL_APPLICATION_PATH = (
+    "/api/v1/calculations/level/application-assessment"
+)
 
 
 def api_integration_executor(
@@ -274,13 +282,14 @@ def test_application_registers_phase_7_calculation_api(
         VERSIONS_PATH,
         DEFINITION_PATH,
         EXECUTE_PATH,
+        LEVEL_APPLICATION_PATH,
         "/api/v1/ingestion/jobs/{job_id}/execute",
         "/api/v1/knowledge",
     }.issubset(paths)
 
 
 def test_openapi_freezes_exact_calculation_operations() -> None:
-    """The four Step 93 paths expose only their intended methods."""
+    """The five Phase 7 paths expose only their intended methods."""
 
     paths = app.openapi()["paths"]
     calculation_paths = {
@@ -294,11 +303,13 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
         VERSIONS_PATH,
         DEFINITION_PATH,
         EXECUTE_PATH,
+        LEVEL_APPLICATION_PATH,
     }
     assert set(paths[METHODS_PATH]) == {"get"}
     assert set(paths[VERSIONS_PATH]) == {"get"}
     assert set(paths[DEFINITION_PATH]) == {"get"}
     assert set(paths[EXECUTE_PATH]) == {"post"}
+    assert set(paths[LEVEL_APPLICATION_PATH]) == {"post"}
 
     assert paths[METHODS_PATH]["get"]["summary"] == (
         "List controlled calculation methods"
@@ -312,6 +323,9 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert paths[EXECUTE_PATH]["post"]["summary"] == (
         "Execute an exact controlled calculation method"
     )
+    assert paths[LEVEL_APPLICATION_PATH]["post"]["summary"] == (
+        "Assess level measurement application"
+    )
     assert paths[METHODS_PATH]["get"]["operationId"] == (
         "listCalculationMethods"
     )
@@ -323,6 +337,9 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     )
     assert paths[EXECUTE_PATH]["post"]["operationId"] == (
         "executeCalculation"
+    )
+    assert paths[LEVEL_APPLICATION_PATH]["post"]["operationId"] == (
+        "assessLevelApplication"
     )
 
 
@@ -350,10 +367,23 @@ def test_openapi_documents_exact_response_contracts() -> None:
         "422",
         "503",
     }
+    assert set(paths[LEVEL_APPLICATION_PATH]["post"]["responses"]) == {
+        "200",
+        "400",
+        "413",
+        "422",
+        "503",
+    }
 
     execute_response = paths[EXECUTE_PATH]["post"]["responses"]["200"]
     assert execute_response["content"]["application/json"]["schema"] == {
         "$ref": "#/components/schemas/CalculationExecutionResult"
+    }
+    assessment_response = paths[LEVEL_APPLICATION_PATH]["post"]["responses"][
+        "200"
+    ]
+    assert assessment_response["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/LevelApplicationAssessment"
     }
     definition_response = paths[DEFINITION_PATH]["get"]["responses"]["200"]
     assert definition_response["content"]["application/json"]["schema"] == {
@@ -457,18 +487,86 @@ def test_openapi_exposes_canonical_method_version_schemas(
     assert re.fullmatch(version_pattern, "1.0.0-01") is None
 
 
-def test_default_production_discovery_is_empty() -> None:
-    """Step 93 does not silently register executable calculation methods."""
+def test_default_production_discovery_lists_engineering_methods() -> None:
+    """Step 95 exposes the reviewed general and level method catalogue."""
 
     client = TestClient(app)
     response = client.get(METHODS_PATH)
 
     assert response.status_code == 200
-    assert response.json() == {
-        "engine_version": "1.0.0",
-        "method_count": 0,
-        "methods": [],
+    body = response.json()
+    assert body["engine_version"] == "1.0.0"
+    assert body["method_count"] == 26
+    assert tuple(
+        method["method_id"]
+        for method in body["methods"]
+    ) == ENGINEERING_METHOD_REGISTRY.method_ids
+    assert all(
+        method["method_version"] == "1.0.0"
+        and method["lifecycle_status"] == "approved"
+        and method["execution_eligible"] is True
+        and "implementation" not in method
+        for method in body["methods"]
+    )
+
+
+def test_default_api_executes_registered_level_reference_vector() -> None:
+    """The production HTTP path executes an exact Step 95 level method."""
+
+    definition = ENGINEERING_METHOD_REGISTRY.resolve(
+        "level.hydrostatic.column-pressure",
+        "1.0.0",
+    )
+    specifications = {
+        item.input_id: item
+        for item in definition.input_specifications
     }
+    values = (
+        ("density", QuantityKind.DENSITY, 998.2, "kg/m3"),
+        ("vertical-height", QuantityKind.LENGTH, 3.5, "m"),
+        (
+            "gravitational-acceleration",
+            QuantityKind.ACCELERATION,
+            9.80665,
+            "m/s2",
+        ),
+    )
+    request = CalculationRequest(
+        request_id=uuid4(),
+        calculation_type=definition.calculation_type,
+        method_id=definition.method_id,
+        method_version=definition.method_version,
+        inputs=tuple(
+            CalculationInput(
+                input_id=input_id,
+                name=specifications[input_id].name,
+                origin=InputOrigin.USER_SUPPLIED,
+                quantity=EngineeringQuantity(
+                    quantity_kind=kind.value,
+                    value=value,
+                    unit=unit,
+                ),
+            )
+            for input_id, kind, value, unit in values
+        ),
+    )
+
+    response = TestClient(app).post(
+        EXECUTE_PATH,
+        json=request.model_dump(mode="json"),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "completed"
+    assert payload["method_id"] == "level.hydrostatic.column-pressure"
+    output = next(
+        item
+        for item in payload["outputs"]
+        if item["output_id"] == "differential-pressure"
+    )
+    assert output["quantity"]["value"] == pytest.approx(34_261.493105)
+    assert output["quantity"]["unit"] == "Pa"
 
 
 def test_method_listing_returns_compact_eligibility_metadata() -> None:
@@ -1315,7 +1413,7 @@ def test_version_catalogue_rejects_ambiguous_sequences(
 
 
 def test_default_service_returns_fixed_unknown_method_error() -> None:
-    """The empty production registry fails closed through the public API."""
+    """An unknown method still fails closed with production methods enabled."""
 
     client = TestClient(app)
     request = build_request()

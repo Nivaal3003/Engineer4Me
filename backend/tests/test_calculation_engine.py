@@ -3508,8 +3508,8 @@ def test_public_engine_exports_resolve() -> None:
         assert getattr(engine_module, name) is not None
 
 
-def test_phase7_package_boundary_exports_step92_contract() -> None:
-    """The package exposes the complete inert Step 92 engine surface."""
+def test_phase7_package_boundary_exports_engine_and_level_contract() -> None:
+    """The package preserves the engine surface and exports Step 95."""
 
     import app.engineering.calculations as calculations
 
@@ -3524,9 +3524,21 @@ def test_phase7_package_boundary_exports_step92_contract() -> None:
         "DEFAULT_METHOD_REGISTRY",
         "DEFAULT_SAFETY_ENGINE",
         "DEFAULT_VALIDATION_ENGINE",
+        "ENGINEERING_CALCULATION_ENGINE",
+        "ENGINEERING_METHOD_IDS",
+        "ENGINEERING_METHOD_REGISTRATIONS",
+        "ENGINEERING_METHOD_REGISTRY",
         "EngineCompatibility",
         "IterationController",
         "IterationLimits",
+        "LEVEL_CALCULATION_ENGINE",
+        "LEVEL_CALCULATORS_VERSION",
+        "LEVEL_METHOD_IDS",
+        "LEVEL_METHOD_REGISTRATIONS",
+        "LEVEL_METHOD_REGISTRY",
+        "LEVEL_METHOD_VERSION",
+        "LevelRangeResult",
+        "LevelTransmitterRangeResult",
         "MethodExecutionContext",
         "MethodExecutionOutcome",
         "MethodInputSpecification",
@@ -3534,14 +3546,15 @@ def test_phase7_package_boundary_exports_step92_contract() -> None:
         "MethodRegistration",
         "SafetyEvaluationContext",
         "SafetyRequirement",
+        "TankVolumeResult",
         "TrustedExecutionEvidence",
         "build_attempt_fingerprint_payload",
         "build_fingerprint_payload",
         "canonical_fingerprint_bytes",
         "fingerprint_payload",
     }
-    assert calculations.FOUNDATION_VERSION == "0.4.0"
-    assert calculations.EXECUTABLE_METHODS_ENABLED is False
+    assert calculations.FOUNDATION_VERSION == "0.6.0"
+    assert calculations.EXECUTABLE_METHODS_ENABLED is True
     assert expected_exports.issubset(set(calculations.__all__))
     assert len(calculations.__all__) == len(set(calculations.__all__))
     for name in calculations.__all__:
@@ -3552,14 +3565,17 @@ def test_phase7_package_boundary_exports_step92_contract() -> None:
     )
 
 
-def test_package_disabled_flag_reflects_empty_registry_not_kill_switch(
+def test_package_enabled_flag_reflects_separate_general_registry(
 ) -> None:
-    """Executable enablement is derived from production registrations only."""
+    """Enablement does not mutate the intentionally empty base registry."""
 
     import app.engineering.calculations as calculations
 
-    assert calculations.EXECUTABLE_METHODS_ENABLED is False
+    assert calculations.EXECUTABLE_METHODS_ENABLED is True
     assert calculations.DEFAULT_METHOD_REGISTRY.definitions == ()
+    assert len(calculations.GENERAL_METHOD_REGISTRY.definitions) == 17
+    assert len(calculations.LEVEL_METHOD_REGISTRY.definitions) == 9
+    assert len(calculations.ENGINEERING_METHOD_REGISTRY.definitions) == 26
     assert make_engine().execute(make_request()).status is (
         CalculationStatus.COMPLETED
     )

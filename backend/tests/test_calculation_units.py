@@ -2618,8 +2618,8 @@ def test_public_unit_exports_are_exact_and_available_from_package() -> None:
 def test_step_91_package_boundary_and_version() -> None:
     assert calculation_package.PHASE_NUMBER == 7
     assert calculation_package.PACKAGE_NAME == "engineering_calculations"
-    assert calculation_package.FOUNDATION_VERSION == "0.4.0"
-    assert calculation_package.EXECUTABLE_METHODS_ENABLED is False
+    assert calculation_package.FOUNDATION_VERSION == "0.6.0"
+    assert calculation_package.EXECUTABLE_METHODS_ENABLED is True
     assert not any(
         "voice" in public_name.casefold()
         for public_name in calculation_package.__all__

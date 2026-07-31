@@ -11,14 +11,18 @@ from pydantic import ValidationError
 import pytest
 
 from app.engineering.calculations.engine import CalculationEngine
+from app.engineering.calculations.level import ENGINEERING_METHOD_REGISTRY
 from app.engineering.calculations.engine import CalculationEvidenceError
 from app.engineering.calculations.method_models import (
     CalculationMethodDefinition,
 )
 from app.engineering.calculations.method_models import EngineCompatibility
+from app.engineering.calculations.models import CalculationInput
 from app.engineering.calculations.models import CalculationRequest
 from app.engineering.calculations.models import CalculationResult
 from app.engineering.calculations.models import CalculationStatus
+from app.engineering.calculations.models import EngineeringQuantity
+from app.engineering.calculations.models import InputOrigin
 from app.engineering.calculations.models import MethodLifecycleStatus
 from app.engineering.calculations.registry import (
     CalculationMethodRegistry,
@@ -32,6 +36,7 @@ from app.engineering.calculations.registry import UnknownMethodError
 from app.engineering.calculations.registry import (
     UnknownMethodVersionError,
 )
+from app.engineering.calculations.units import QuantityKind
 from app.engineering.calculations.method_models import (
     TrustedExecutionEvidence,
 )
@@ -201,12 +206,67 @@ def service(engine: CalculationEngine) -> CalculationService:
     return CalculationService(engine=engine)
 
 
-def test_default_service_uses_empty_production_registry() -> None:
-    """The application default must not silently enable a method."""
+def test_default_service_uses_reviewed_engineering_registry() -> None:
+    """The application default exposes approved Step 94 and Step 95 methods."""
 
     assert DEFAULT_CALCULATION_SERVICE.engine_version == "1.0.0"
-    assert DEFAULT_CALCULATION_SERVICE.method_count == 0
-    assert DEFAULT_CALCULATION_SERVICE.discover_methods() == ()
+    assert DEFAULT_CALCULATION_SERVICE.method_count == 26
+    assert tuple(
+        definition.method_id
+        for definition in DEFAULT_CALCULATION_SERVICE.discover_methods()
+    ) == ENGINEERING_METHOD_REGISTRY.method_ids
+
+
+def test_default_service_executes_registered_level_reference_vector() -> None:
+    """The production service executes the Step 95 hydrostatic method."""
+
+    definition = ENGINEERING_METHOD_REGISTRY.resolve(
+        "level.hydrostatic.column-pressure",
+        "1.0.0",
+    )
+    values = (
+        ("density", QuantityKind.DENSITY, 998.2, "kg/m3"),
+        ("vertical-height", QuantityKind.LENGTH, 3.5, "m"),
+        (
+            "gravitational-acceleration",
+            QuantityKind.ACCELERATION,
+            9.80665,
+            "m/s2",
+        ),
+    )
+    specifications = {
+        item.input_id: item
+        for item in definition.input_specifications
+    }
+    request = CalculationRequest(
+        request_id=FIXED_REQUEST_ID,
+        calculation_type=definition.calculation_type,
+        method_id=definition.method_id,
+        method_version=definition.method_version,
+        requested_at=FIXED_TIME,
+        inputs=tuple(
+            CalculationInput(
+                input_id=input_id,
+                name=specifications[input_id].name,
+                origin=InputOrigin.USER_SUPPLIED,
+                quantity=EngineeringQuantity(
+                    quantity_kind=kind.value,
+                    value=value,
+                    unit=unit,
+                ),
+            )
+            for input_id, kind, value, unit in values
+        ),
+    )
+
+    result = DEFAULT_CALCULATION_SERVICE.execute(request)
+
+    assert result.status is CalculationStatus.COMPLETED
+    assert result.method_id == "level.hydrostatic.column-pressure"
+    assert result.outputs[0].output_id == "differential-pressure"
+    assert result.outputs[0].quantity is not None
+    assert result.outputs[0].quantity.value == pytest.approx(34_261.493105)
+    assert result.outputs[0].quantity.unit == "Pa"
 
 
 def test_constructor_rejects_non_engine() -> None:

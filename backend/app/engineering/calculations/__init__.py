@@ -1,14 +1,15 @@
-"""Engineer4Me Phase 7 engineering-calculation foundation.
+"""Engineer4Me Phase 7 engineering-calculation foundation and general pack.
 
 Steps 90 through 92 provide immutable shared calculation contracts, the
 deterministic unit subsystem, versioned method metadata, an exact allow-listed
 registry, fail-closed validation and safety boundaries, bounded iteration, and
 deterministic result fingerprinting.
 
-No production calculation implementation is registered at this foundation
-step. Uploaded, extracted, or AI-generated formula text is inert and cannot be
-resolved as code. A future executable method must be directly implemented,
-exactly registered, versioned, independently reviewed, and reference-tested.
+Step 94 adds seventeen reviewed general methods.  Step 95 adds nine reviewed
+pressure and level methods and composes both immutable catalogues into the
+production engine.  The Step 92 default registry and engine remain empty
+foundation fixtures. Uploaded, extracted, or AI-generated formula text remains
+inert and cannot be resolved as code.
 
 Pressure basis and volumetric-flow reference conditions remain explicit.
 Voice functionality is outside Phase 7 and remains scheduled for Phase 10.
@@ -184,12 +185,118 @@ from app.engineering.calculations.validation import DEFAULT_VALIDATION_ENGINE
 from app.engineering.calculations.validation import (
     InvalidValidationContractError,
 )
+from app.engineering.calculations.general import (
+    GENERAL_CALCULATION_ENGINE,
+)
+from app.engineering.calculations.general import (
+    GENERAL_CALCULATION_TYPE_PREFIX,
+)
+from app.engineering.calculations.general import GENERAL_CALCULATORS_VERSION
+from app.engineering.calculations.general import GENERAL_METHOD_IDS
+from app.engineering.calculations.general import GENERAL_METHOD_REGISTRATIONS
+from app.engineering.calculations.general import GENERAL_METHOD_REGISTRY
+from app.engineering.calculations.general import GENERAL_METHOD_VERSION
+from app.engineering.calculations.general import GeneralCalculationDomainError
+from app.engineering.calculations.general import GeneralCalculationError
+from app.engineering.calculations.general import GeneralCalculationInputError
+from app.engineering.calculations.general import LoopVoltageBudgetResult
+from app.engineering.calculations.general import PipeFlowResult
+from app.engineering.calculations.general import TransmitterRangeResult
+from app.engineering.calculations.general import actual_volume_from_mass_flow
+from app.engineering.calculations.general import assess_dp_transmitter_range
+from app.engineering.calculations.general import (
+    combine_independent_standard_uncertainties,
+)
+from app.engineering.calculations.general import convert_pressure
+from app.engineering.calculations.general import (
+    convert_referenced_gas_volume,
+)
+from app.engineering.calculations.general import current_from_linear_fraction
+from app.engineering.calculations.general import (
+    current_from_square_root_flow_fraction,
+)
+from app.engineering.calculations.general import dc_loop_voltage_budget
+from app.engineering.calculations.general import (
+    density_from_specific_gravity,
+)
+from app.engineering.calculations.general import (
+    dynamic_viscosity_from_kinematic,
+)
+from app.engineering.calculations.general import (
+    flow_fraction_from_square_root_signal,
+)
+from app.engineering.calculations.general import hydrostatic_pressure
+from app.engineering.calculations.general import (
+    kinematic_viscosity_from_dynamic,
+)
+from app.engineering.calculations.general import linear_fraction_from_current
+from app.engineering.calculations.general import mass_flow_from_actual_volume
+from app.engineering.calculations.general import (
+    pipe_area_velocity_reynolds,
+)
+from app.engineering.calculations.general import pressure_head
+from app.engineering.calculations.general import (
+    propagate_independent_uncertainty,
+)
+from app.engineering.calculations.general import (
+    specific_gravity_from_density,
+)
+from app.engineering.calculations.general import (
+    square_root_flow_fraction_from_current,
+)
+from app.engineering.calculations.general import (
+    square_root_signal_fraction_from_flow,
+)
+from app.engineering.calculations.general import transmitter_linear_fraction
+from app.engineering.calculations.general import (
+    transmitter_value_from_fraction,
+)
+from app.engineering.calculations.level import ENGINEERING_CALCULATION_ENGINE
+from app.engineering.calculations.level import ENGINEERING_METHOD_IDS
+from app.engineering.calculations.level import (
+    ENGINEERING_METHOD_REGISTRATIONS,
+)
+from app.engineering.calculations.level import ENGINEERING_METHOD_REGISTRY
+from app.engineering.calculations.level import LEVEL_CALCULATION_ENGINE
+from app.engineering.calculations.level import (
+    LEVEL_CALCULATION_TYPE_PREFIX,
+)
+from app.engineering.calculations.level import LEVEL_CALCULATORS_VERSION
+from app.engineering.calculations.level import LEVEL_METHOD_IDS
+from app.engineering.calculations.level import LEVEL_METHOD_REGISTRATIONS
+from app.engineering.calculations.level import LEVEL_METHOD_REGISTRY
+from app.engineering.calculations.level import LEVEL_METHOD_VERSION
+from app.engineering.calculations.level import LevelCalculationDomainError
+from app.engineering.calculations.level import LevelCalculationError
+from app.engineering.calculations.level import LevelCalculationInputError
+from app.engineering.calculations.level import LevelRangeResult
+from app.engineering.calculations.level import LevelTransmitterRangeResult
+from app.engineering.calculations.level import PressureLevelRangeResult
+from app.engineering.calculations.level import PressureLimitScreenResult
+from app.engineering.calculations.level import TankVolumeResult
+from app.engineering.calculations.level import dry_leg_dp_range
+from app.engineering.calculations.level import (
+    horizontal_cylindrical_tank_volume,
+)
+from app.engineering.calculations.level import interface_dp_range
+from app.engineering.calculations.level import liquid_column_pressure
+from app.engineering.calculations.level import liquid_head_from_pressure
+from app.engineering.calculations.level import open_vessel_dp_range
+from app.engineering.calculations.level import remote_seal_dp_range
+from app.engineering.calculations.level import (
+    screen_level_transmitter_range,
+)
+from app.engineering.calculations.level import screen_pressure_limits
+from app.engineering.calculations.level import (
+    vertical_cylindrical_tank_volume,
+)
+from app.engineering.calculations.level import wet_leg_dp_range
 
 
 PHASE_NUMBER = 7
 PACKAGE_NAME = "engineering_calculations"
-FOUNDATION_VERSION = "0.4.0"
-EXECUTABLE_METHODS_ENABLED = False
+FOUNDATION_VERSION = "0.6.0"
+EXECUTABLE_METHODS_ENABLED = True
 
 
 __all__ = [
@@ -233,12 +340,26 @@ __all__ = [
     "ENGINE_PRE_EXECUTION_RESULT_FINDING_ID",
     "ENGINE_RESULT_FINDING_ID",
     "ENGINE_VERSION",
+    "ENGINEERING_CALCULATION_ENGINE",
+    "ENGINEERING_METHOD_IDS",
+    "ENGINEERING_METHOD_REGISTRATIONS",
+    "ENGINEERING_METHOD_REGISTRY",
     "EXECUTABLE_METHODS_ENABLED",
     "EngineCompatibility",
     "EngineeringQuantity",
     "FINGERPRINT_SCHEMA",
     "FlowReferenceBasis",
     "FOUNDATION_VERSION",
+    "GENERAL_CALCULATION_ENGINE",
+    "GENERAL_CALCULATION_TYPE_PREFIX",
+    "GENERAL_CALCULATORS_VERSION",
+    "GENERAL_METHOD_IDS",
+    "GENERAL_METHOD_REGISTRATIONS",
+    "GENERAL_METHOD_REGISTRY",
+    "GENERAL_METHOD_VERSION",
+    "GeneralCalculationDomainError",
+    "GeneralCalculationError",
+    "GeneralCalculationInputError",
     "FindingCategory",
     "FindingSeverity",
     "FormulaMetadata",
@@ -279,12 +400,28 @@ __all__ = [
     "MissingCalculationInput",
     "NonFiniteIterationError",
     "NumericApplicabilityRange",
+    "LoopVoltageBudgetResult",
+    "LEVEL_CALCULATION_ENGINE",
+    "LEVEL_CALCULATION_TYPE_PREFIX",
+    "LEVEL_CALCULATORS_VERSION",
+    "LEVEL_METHOD_IDS",
+    "LEVEL_METHOD_REGISTRATIONS",
+    "LEVEL_METHOD_REGISTRY",
+    "LEVEL_METHOD_VERSION",
+    "LevelCalculationDomainError",
+    "LevelCalculationError",
+    "LevelCalculationInputError",
+    "LevelRangeResult",
+    "LevelTransmitterRangeResult",
     "PACKAGE_NAME",
     "PHASE_NUMBER",
     "PhysicalDimension",
     "PresentationRoundingError",
     "PresentationRoundingMode",
     "PressureBasisError",
+    "PressureLevelRangeResult",
+    "PressureLimitScreenResult",
+    "PipeFlowResult",
     "QuantityKind",
     "ReferenceConditionError",
     "ReferenceConditions",
@@ -300,6 +437,8 @@ __all__ = [
     "SafetyTrigger",
     "TraceStepKind",
     "TraceStepStatus",
+    "TransmitterRangeResult",
+    "TankVolumeResult",
     "TrustedExecutionEvidence",
     "UnitConversionError",
     "UnitDefinition",
@@ -311,14 +450,48 @@ __all__ = [
     "UnknownMethodError",
     "UnknownMethodVersionError",
     "VerificationRequirement",
+    "actual_volume_from_mass_flow",
+    "assess_dp_transmitter_range",
     "build_attempt_fingerprint_payload",
     "build_fingerprint_payload",
     "canonical_fingerprint_bytes",
+    "combine_independent_standard_uncertainties",
+    "convert_pressure",
     "convert_pressure_basis",
+    "convert_referenced_gas_volume",
     "convert_referenced_volumetric_flow",
+    "current_from_linear_fraction",
+    "current_from_square_root_flow_fraction",
+    "dc_loop_voltage_budget",
+    "density_from_specific_gravity",
+    "dynamic_viscosity_from_kinematic",
+    "dry_leg_dp_range",
     "fingerprint_payload",
+    "flow_fraction_from_square_root_signal",
     "format_quantity_value",
+    "hydrostatic_pressure",
+    "horizontal_cylindrical_tank_volume",
+    "interface_dp_range",
+    "kinematic_viscosity_from_dynamic",
+    "linear_fraction_from_current",
+    "liquid_column_pressure",
+    "liquid_head_from_pressure",
+    "mass_flow_from_actual_volume",
+    "pipe_area_velocity_reynolds",
+    "open_vessel_dp_range",
     "presentation_value",
+    "pressure_head",
+    "propagate_independent_uncertainty",
     "round_decimal_places",
     "round_significant_figures",
+    "remote_seal_dp_range",
+    "screen_level_transmitter_range",
+    "screen_pressure_limits",
+    "specific_gravity_from_density",
+    "square_root_flow_fraction_from_current",
+    "square_root_signal_fraction_from_flow",
+    "transmitter_linear_fraction",
+    "transmitter_value_from_fraction",
+    "vertical_cylindrical_tank_volume",
+    "wet_leg_dp_range",
 ]

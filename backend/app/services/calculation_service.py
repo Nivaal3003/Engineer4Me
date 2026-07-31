@@ -26,6 +26,7 @@ from pydantic import BaseModel
 
 from app.engineering.calculations.engine import CalculationEngine
 from app.engineering.calculations.engine import DEFAULT_CALCULATION_ENGINE
+from app.engineering.calculations.level import ENGINEERING_CALCULATION_ENGINE
 from app.engineering.calculations.method_models import (
     CalculationMethodDefinition,
 )
@@ -282,7 +283,9 @@ class CalculationService:
         return _fresh_model(CalculationResult, result)
 
 
-DEFAULT_CALCULATION_SERVICE: Final = CalculationService()
+DEFAULT_CALCULATION_SERVICE: Final = CalculationService(
+    engine=ENGINEERING_CALCULATION_ENGINE
+)
 
 
 __all__ = [
