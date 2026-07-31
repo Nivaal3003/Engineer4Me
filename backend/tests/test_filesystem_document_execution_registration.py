@@ -11,13 +11,13 @@ JOBS_PATH = "/api/v1/ingestion/jobs"
 
 
 def test_application_version_includes_execution_transport() -> None:
-    """The application and root payload expose the Phase 6 API version."""
+    """The application and root payload expose the Phase 7 API version."""
 
-    assert app.version == "0.9.0"
+    assert app.version == "0.10.0"
     assert root() == {
         "application": "Engineer4Me",
         "status": "running",
-        "version": "0.9.0",
+        "version": "0.10.0",
     }
 
 

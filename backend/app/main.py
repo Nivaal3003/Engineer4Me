@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from app.api.calculations import CalculationRequestBodyLimitMiddleware
+from app.api.calculations import router as calculation_router
 from app.api.filesystem_document_execution_api import (
     router as filesystem_document_execution_router,
 )
@@ -16,14 +18,18 @@ from app.api.protocol import router as protocol_router
 from app.api.selections import router as selection_router
 
 
+APPLICATION_VERSION = "0.10.0"
+
+
 app = FastAPI(
     title="Engineer4Me API",
-    version="0.9.0",
+    version=APPLICATION_VERSION,
     description=(
         "Vendor-neutral engineering knowledge platform "
         "for process instrumentation."
     ),
 )
+app.add_middleware(CalculationRequestBodyLimitMiddleware)
 
 
 @app.get(
@@ -34,7 +40,7 @@ def root() -> dict[str, str]:
     return {
         "application": "Engineer4Me",
         "status": "running",
-        "version": "0.9.0",
+        "version": APPLICATION_VERSION,
     }
 
 
@@ -95,5 +101,10 @@ app.include_router(
 
 app.include_router(
     filesystem_document_execution_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    calculation_router,
     prefix="/api/v1",
 )
