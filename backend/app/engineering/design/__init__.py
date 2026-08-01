@@ -2,9 +2,11 @@
 
 Step 89 establishes the import-safe package boundary. Step 96 adds the strict,
 vendor-neutral level-application domain used by the reviewed assessment
-wizard. Design cases, analyzer application assessment, controlled datasheets,
-persistence, and export services are introduced by later reviewed Phase 7
-steps.
+wizard. Step 98 adds vendor-neutral DP primary-element screening with explicit
+owned-product notices. Step 99 adds typed, immutable DP-flow workflow and
+illustrative replay-case contracts. User-created design-case persistence,
+analyzer application assessment, controlled datasheets, and export services
+are introduced by later reviewed Phase 7 steps.
 
 Voice input, speech recognition, voice search, and text-to-speech are not part
 of this package. Those capabilities remain scheduled for Phase 10.
@@ -108,6 +110,35 @@ from app.engineering.design.level_application_wizard import (
 from app.engineering.design.level_application_wizard import (
     assess_level_application,
 )
+from app.engineering.design.dp_flow_application_models import DPConfidenceBand
+from app.engineering.design.dp_flow_application_models import DPCalculationReadiness
+from app.engineering.design.dp_flow_application_models import DPFlowApplicationAssessment
+from app.engineering.design.dp_flow_application_models import DPFlowApplicationRequest
+from app.engineering.design.dp_flow_application_models import DPFluidPhase
+from app.engineering.design.dp_flow_application_models import DPMeasurementObjective
+from app.engineering.design.dp_flow_application_models import DPOfficialSource
+from app.engineering.design.dp_flow_application_models import DPOwnershipType
+from app.engineering.design.dp_flow_application_models import DPPressureLossClass
+from app.engineering.design.dp_flow_application_models import DPPrimaryElementDefinition
+from app.engineering.design.dp_flow_application_models import DPPrimaryElementFamily
+from app.engineering.design.dp_flow_application_models import DPPrimaryElementScenario
+from app.engineering.design.dp_flow_application_models import DPProprietaryNotice
+from app.engineering.design.dp_flow_application_models import DPScenarioDisposition
+from app.engineering.design.dp_flow_application_models import DPTriState
+from app.engineering.design.dp_flow_application_models import DPVerificationPriority
+from app.engineering.design.dp_flow_application_models import DPVerificationStep
+from app.engineering.design.dp_flow_application_models import DP_FLOW_APPLICATION_MODEL_VERSION
+from app.engineering.design.dp_flow_application_models import FINAL_BRAND_DECISION_NOTICE
+from app.engineering.design.dp_flow_application_wizard import DEFAULT_DP_FLOW_APPLICATION_WIZARD
+from app.engineering.design.dp_flow_application_wizard import DPFlowApplicationWizard
+from app.engineering.design.dp_flow_application_wizard import DP_FLOW_APPLICATION_RULESET_VERSION
+from app.engineering.design.dp_flow_application_wizard import DP_FLOW_APPLICATION_WIZARD_VERSION
+from app.engineering.design.dp_flow_application_wizard import GENERIC_PRIMARY_ELEMENTS
+from app.engineering.design.dp_flow_application_wizard import OFFICIAL_SOURCES
+from app.engineering.design.dp_flow_application_wizard import PRIMARY_ELEMENT_CATALOGUE
+from app.engineering.design.dp_flow_application_wizard import PROPRIETARY_PRIMARY_ELEMENTS
+from app.engineering.design.dp_flow_application_wizard import VERIFICATION_STEPS
+from app.engineering.design.dp_flow_application_wizard import assess_dp_flow_application
 
 
 PHASE_NUMBER = 7
@@ -118,8 +149,32 @@ VOICE_FUNCTIONALITY_ENABLED = False
 
 __all__ = [
     "ApprovalText",
+    "DEFAULT_DP_FLOW_APPLICATION_WIZARD",
     "DEFAULT_LEVEL_APPLICATION_WIZARD",
     "FOUNDATION_VERSION",
+    "DPConfidenceBand",
+    "DPCalculationReadiness",
+    "DPFlowApplicationAssessment",
+    "DPFlowApplicationRequest",
+    "DPFlowApplicationWizard",
+    "DPFluidPhase",
+    "DPMeasurementObjective",
+    "DPOfficialSource",
+    "DPOwnershipType",
+    "DPPressureLossClass",
+    "DPPrimaryElementDefinition",
+    "DPPrimaryElementFamily",
+    "DPPrimaryElementScenario",
+    "DPProprietaryNotice",
+    "DPScenarioDisposition",
+    "DPTriState",
+    "DPVerificationPriority",
+    "DPVerificationStep",
+    "DP_FLOW_APPLICATION_MODEL_VERSION",
+    "DP_FLOW_APPLICATION_RULESET_VERSION",
+    "DP_FLOW_APPLICATION_WIZARD_VERSION",
+    "FINAL_BRAND_DECISION_NOTICE",
+    "GENERIC_PRIMARY_ELEMENTS",
     "LEVEL_APPLICATION_MODEL_VERSION",
     "LEVEL_APPLICATION_RULESET_VERSION",
     "LEVEL_APPLICATION_WIZARD_VERSION",
@@ -157,10 +212,15 @@ __all__ = [
     "LevelVesselGeometry",
     "LevelWizardFinding",
     "PACKAGE_NAME",
+    "OFFICIAL_SOURCES",
     "PHASE_NUMBER",
+    "PRIMARY_ELEMENT_CATALOGUE",
+    "PROPRIETARY_PRIMARY_ELEMENTS",
     "SUPPORTED_LEVEL_CALCULATION_METHOD_IDS",
     "SUPPORTED_LEVEL_METHOD_IDS",
     "VOICE_FUNCTIONALITY_ENABLED",
+    "VERIFICATION_STEPS",
+    "assess_dp_flow_application",
     "assess_level_application",
     "canonical_quantity_value",
 ]

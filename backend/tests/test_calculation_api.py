@@ -66,6 +66,23 @@ EXECUTE_PATH = "/api/v1/calculations/execute"
 LEVEL_APPLICATION_PATH = (
     "/api/v1/calculations/level/application-assessment"
 )
+DP_FLOW_CATALOGUE_PATH = "/api/v1/calculations/dp-flow/catalogue"
+DP_FLOW_KNOWLEDGE_LINKS_PATH = (
+    "/api/v1/calculations/dp-flow/knowledge-links"
+)
+DP_FLOW_DESIGN_CASE_EXAMPLES_PATH = (
+    "/api/v1/calculations/dp-flow/design-case-examples"
+)
+DP_FLOW_EXECUTION_PATH = "/api/v1/calculations/dp-flow/execute"
+DP_FLOW_APPLICATION_ASSESSMENT_PATH = (
+    "/api/v1/calculations/dp-flow/application-assessment"
+)
+DP_FLOW_DESIGN_CASE_EVALUATION_PATH = (
+    "/api/v1/calculations/dp-flow/design-cases/evaluate"
+)
+DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH = (
+    "/api/v1/calculations/dp-flow/design-cases/stored/evaluate"
+)
 
 
 def api_integration_executor(
@@ -283,13 +300,20 @@ def test_application_registers_phase_7_calculation_api(
         DEFINITION_PATH,
         EXECUTE_PATH,
         LEVEL_APPLICATION_PATH,
+        DP_FLOW_CATALOGUE_PATH,
+        DP_FLOW_KNOWLEDGE_LINKS_PATH,
+        DP_FLOW_DESIGN_CASE_EXAMPLES_PATH,
+        DP_FLOW_EXECUTION_PATH,
+        DP_FLOW_APPLICATION_ASSESSMENT_PATH,
+        DP_FLOW_DESIGN_CASE_EVALUATION_PATH,
+        DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH,
         "/api/v1/ingestion/jobs/{job_id}/execute",
         "/api/v1/knowledge",
     }.issubset(paths)
 
 
 def test_openapi_freezes_exact_calculation_operations() -> None:
-    """The five Phase 7 paths expose only their intended methods."""
+    """The twelve Phase 7 paths expose only their intended methods."""
 
     paths = app.openapi()["paths"]
     calculation_paths = {
@@ -304,12 +328,28 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
         DEFINITION_PATH,
         EXECUTE_PATH,
         LEVEL_APPLICATION_PATH,
+        DP_FLOW_CATALOGUE_PATH,
+        DP_FLOW_KNOWLEDGE_LINKS_PATH,
+        DP_FLOW_DESIGN_CASE_EXAMPLES_PATH,
+        DP_FLOW_EXECUTION_PATH,
+        DP_FLOW_APPLICATION_ASSESSMENT_PATH,
+        DP_FLOW_DESIGN_CASE_EVALUATION_PATH,
+        DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH,
     }
     assert set(paths[METHODS_PATH]) == {"get"}
     assert set(paths[VERSIONS_PATH]) == {"get"}
     assert set(paths[DEFINITION_PATH]) == {"get"}
     assert set(paths[EXECUTE_PATH]) == {"post"}
     assert set(paths[LEVEL_APPLICATION_PATH]) == {"post"}
+    assert set(paths[DP_FLOW_CATALOGUE_PATH]) == {"get"}
+    assert set(paths[DP_FLOW_KNOWLEDGE_LINKS_PATH]) == {"get"}
+    assert set(paths[DP_FLOW_DESIGN_CASE_EXAMPLES_PATH]) == {"get"}
+    assert set(paths[DP_FLOW_EXECUTION_PATH]) == {"post"}
+    assert set(paths[DP_FLOW_APPLICATION_ASSESSMENT_PATH]) == {"post"}
+    assert set(paths[DP_FLOW_DESIGN_CASE_EVALUATION_PATH]) == {"post"}
+    assert set(paths[DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH]) == {
+        "post"
+    }
 
     assert paths[METHODS_PATH]["get"]["summary"] == (
         "List controlled calculation methods"
@@ -326,6 +366,27 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert paths[LEVEL_APPLICATION_PATH]["post"]["summary"] == (
         "Assess level measurement application"
     )
+    assert paths[DP_FLOW_CATALOGUE_PATH]["get"]["summary"] == (
+        "Get DP-flow catalogue"
+    )
+    assert paths[DP_FLOW_KNOWLEDGE_LINKS_PATH]["get"]["summary"] == (
+        "List DP-flow knowledge links"
+    )
+    assert paths[DP_FLOW_DESIGN_CASE_EXAMPLES_PATH]["get"]["summary"] == (
+        "List DP-flow design-case examples"
+    )
+    assert paths[DP_FLOW_EXECUTION_PATH]["post"]["summary"] == (
+        "Execute an exact DP-flow calculation"
+    )
+    assert paths[DP_FLOW_APPLICATION_ASSESSMENT_PATH]["post"]["summary"] == (
+        "Assess DP-flow application"
+    )
+    assert paths[DP_FLOW_DESIGN_CASE_EVALUATION_PATH]["post"]["summary"] == (
+        "Evaluate a stateless DP-flow design case"
+    )
+    assert paths[DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH]["post"][
+        "summary"
+    ] == "Evaluate an exact stored DP-flow design case"
     assert paths[METHODS_PATH]["get"]["operationId"] == (
         "listCalculationMethods"
     )
@@ -341,6 +402,27 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert paths[LEVEL_APPLICATION_PATH]["post"]["operationId"] == (
         "assessLevelApplication"
     )
+    assert paths[DP_FLOW_CATALOGUE_PATH]["get"]["operationId"] == (
+        "getDPFlowCatalogue"
+    )
+    assert paths[DP_FLOW_KNOWLEDGE_LINKS_PATH]["get"]["operationId"] == (
+        "listDPFlowKnowledgeLinks"
+    )
+    assert paths[DP_FLOW_DESIGN_CASE_EXAMPLES_PATH]["get"]["operationId"] == (
+        "listDPFlowDesignCaseExamples"
+    )
+    assert paths[DP_FLOW_EXECUTION_PATH]["post"]["operationId"] == (
+        "executeDPFlowCalculation"
+    )
+    assert paths[DP_FLOW_APPLICATION_ASSESSMENT_PATH]["post"][
+        "operationId"
+    ] == "assessDPFlowApplication"
+    assert paths[DP_FLOW_DESIGN_CASE_EVALUATION_PATH]["post"][
+        "operationId"
+    ] == "evaluateDPFlowDesignCase"
+    assert paths[DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH]["post"][
+        "operationId"
+    ] == "evaluateStoredDPFlowDesignCase"
 
 
 def test_openapi_documents_exact_response_contracts() -> None:
