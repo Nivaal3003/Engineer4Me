@@ -83,6 +83,18 @@ DP_FLOW_DESIGN_CASE_EVALUATION_PATH = (
 DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH = (
     "/api/v1/calculations/dp-flow/design-cases/stored/evaluate"
 )
+CONTROL_VALVE_CATALOGUE_PATH = (
+    "/api/v1/calculations/control-valves/catalogue"
+)
+CONTROL_VALVE_KNOWLEDGE_LINKS_PATH = (
+    "/api/v1/calculations/control-valves/knowledge-links"
+)
+CONTROL_VALVE_EXECUTION_PATH = (
+    "/api/v1/calculations/control-valves/execute"
+)
+CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH = (
+    "/api/v1/calculations/control-valves/design-cases/evaluate"
+)
 
 
 def api_integration_executor(
@@ -307,13 +319,17 @@ def test_application_registers_phase_7_calculation_api(
         DP_FLOW_APPLICATION_ASSESSMENT_PATH,
         DP_FLOW_DESIGN_CASE_EVALUATION_PATH,
         DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH,
+        CONTROL_VALVE_CATALOGUE_PATH,
+        CONTROL_VALVE_KNOWLEDGE_LINKS_PATH,
+        CONTROL_VALVE_EXECUTION_PATH,
+        CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH,
         "/api/v1/ingestion/jobs/{job_id}/execute",
         "/api/v1/knowledge",
     }.issubset(paths)
 
 
 def test_openapi_freezes_exact_calculation_operations() -> None:
-    """The twelve Phase 7 paths expose only their intended methods."""
+    """The sixteen Phase 7 paths expose only their intended methods."""
 
     paths = app.openapi()["paths"]
     calculation_paths = {
@@ -335,6 +351,10 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
         DP_FLOW_APPLICATION_ASSESSMENT_PATH,
         DP_FLOW_DESIGN_CASE_EVALUATION_PATH,
         DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH,
+        CONTROL_VALVE_CATALOGUE_PATH,
+        CONTROL_VALVE_KNOWLEDGE_LINKS_PATH,
+        CONTROL_VALVE_EXECUTION_PATH,
+        CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH,
     }
     assert set(paths[METHODS_PATH]) == {"get"}
     assert set(paths[VERSIONS_PATH]) == {"get"}
@@ -348,6 +368,12 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert set(paths[DP_FLOW_APPLICATION_ASSESSMENT_PATH]) == {"post"}
     assert set(paths[DP_FLOW_DESIGN_CASE_EVALUATION_PATH]) == {"post"}
     assert set(paths[DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH]) == {
+        "post"
+    }
+    assert set(paths[CONTROL_VALVE_CATALOGUE_PATH]) == {"get"}
+    assert set(paths[CONTROL_VALVE_KNOWLEDGE_LINKS_PATH]) == {"get"}
+    assert set(paths[CONTROL_VALVE_EXECUTION_PATH]) == {"post"}
+    assert set(paths[CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH]) == {
         "post"
     }
 
@@ -387,6 +413,18 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert paths[DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH]["post"][
         "summary"
     ] == "Evaluate an exact stored DP-flow design case"
+    assert paths[CONTROL_VALVE_CATALOGUE_PATH]["get"]["summary"] == (
+        "Get control-valve catalogue"
+    )
+    assert paths[CONTROL_VALVE_KNOWLEDGE_LINKS_PATH]["get"]["summary"] == (
+        "List control-valve knowledge links"
+    )
+    assert paths[CONTROL_VALVE_EXECUTION_PATH]["post"]["summary"] == (
+        "Execute an exact control-valve calculation"
+    )
+    assert paths[CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH]["post"][
+        "summary"
+    ] == "Evaluate a stateless control-valve design case"
     assert paths[METHODS_PATH]["get"]["operationId"] == (
         "listCalculationMethods"
     )
@@ -423,6 +461,18 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert paths[DP_FLOW_STORED_DESIGN_CASE_EVALUATION_PATH]["post"][
         "operationId"
     ] == "evaluateStoredDPFlowDesignCase"
+    assert paths[CONTROL_VALVE_CATALOGUE_PATH]["get"]["operationId"] == (
+        "getControlValveCatalogue"
+    )
+    assert paths[CONTROL_VALVE_KNOWLEDGE_LINKS_PATH]["get"][
+        "operationId"
+    ] == "listControlValveKnowledgeLinks"
+    assert paths[CONTROL_VALVE_EXECUTION_PATH]["post"]["operationId"] == (
+        "executeControlValveCalculation"
+    )
+    assert paths[CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH]["post"][
+        "operationId"
+    ] == "evaluateControlValveDesignCase"
 
 
 def test_openapi_documents_exact_response_contracts() -> None:

@@ -2,6 +2,8 @@ from fastapi import FastAPI
 
 from app.api.calculations import CalculationRequestBodyLimitMiddleware
 from app.api.calculations import router as calculation_router
+from app.api.control_valves import ControlValveRequestBodyLimitMiddleware
+from app.api.control_valves import router as control_valve_router
 from app.api.dp_flow import DPFlowRequestBodyLimitMiddleware
 from app.api.dp_flow import router as dp_flow_router
 from app.api.filesystem_document_execution_api import (
@@ -38,6 +40,7 @@ app = FastAPI(
 app.add_middleware(CalculationRequestBodyLimitMiddleware)
 app.add_middleware(LevelApplicationRequestBodyLimitMiddleware)
 app.add_middleware(DPFlowRequestBodyLimitMiddleware)
+app.add_middleware(ControlValveRequestBodyLimitMiddleware)
 
 
 @app.get(
@@ -124,5 +127,10 @@ app.include_router(
 
 app.include_router(
     dp_flow_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    control_valve_router,
     prefix="/api/v1",
 )
