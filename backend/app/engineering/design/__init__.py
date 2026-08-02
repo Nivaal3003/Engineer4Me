@@ -4,9 +4,12 @@ Step 89 establishes the import-safe package boundary. Step 96 adds the strict,
 vendor-neutral level-application domain used by the reviewed assessment
 wizard. Step 98 adds vendor-neutral DP primary-element screening with explicit
 owned-product notices. Step 99 adds typed, immutable DP-flow workflow and
-illustrative replay-case contracts. User-created design-case persistence,
-analyzer application assessment, controlled datasheets, and export services
-are introduced by later reviewed Phase 7 steps.
+illustrative replay-case contracts. Step 106 adds strict analyzer application
+models and a deterministic, vendor-neutral technology assistant. Step 107
+binds analyzer assessments to inert internal governance metadata and adds
+immutable illustrative design cases. User-created design-case persistence,
+controlled datasheets, and export services are introduced by later reviewed
+Phase 7 steps.
 
 Voice input, speech recognition, voice search, and text-to-speech are not part
 of this package. Those capabilities remain scheduled for Phase 10.
@@ -14,132 +17,152 @@ of this package. Those capabilities remain scheduled for Phase 10.
 
 from __future__ import annotations
 
-from app.engineering.design.level_application_models import ApprovalText
+from app.engineering.design.analyzer_assistant import (
+    ANALYZER_ASSISTANT_VERSION,
+    ANALYZER_RULESET_VERSION,
+    ANALYZER_TECHNOLOGY_CATALOGUE,
+    ANALYZER_TECHNOLOGY_REGISTRY,
+    ANALYZER_TECHNOLOGY_TAXONOMY_VERSION,
+    ANALYZER_VERIFICATION_STEPS,
+    DEFAULT_ANALYZER_APPLICATION_ASSISTANT,
+    AnalyzerApplicationAssistant,
+    AnalyzerApplicationAssistantError,
+    assess_analyzer_application,
+)
+from app.engineering.design.analyzer_models import (
+    ANALYZER_APPLICATION_MODEL_VERSION,
+    AnalyzerAnalyteFamily,
+    AnalyzerAnalyteRequirement,
+    AnalyzerApplicationAssessment,
+    AnalyzerApplicationKind,
+    AnalyzerApplicationRequest,
+    AnalyzerConditionSeverity,
+    AnalyzerConfidenceBand,
+    AnalyzerEnvironmentCondition,
+    AnalyzerInstallationContext,
+    AnalyzerInterferenceMechanism,
+    AnalyzerKnownInterference,
+    AnalyzerMeasurementObjective,
+    AnalyzerMeasurementRequirements,
+    AnalyzerMissingInformation,
+    AnalyzerProcessContext,
+    AnalyzerResponseContributorKind,
+    AnalyzerResponseTimeContributor,
+    AnalyzerRuleResult,
+    AnalyzerRuleStatus,
+    AnalyzerSafetyContext,
+    AnalyzerSafetyFinding,
+    AnalyzerSampleApproach,
+    AnalyzerSampleDisposition,
+    AnalyzerSamplePhase,
+    AnalyzerSampleSystemContext,
+    AnalyzerScenarioDisposition,
+    AnalyzerTechnology,
+    AnalyzerTechnologyDefinition,
+    AnalyzerTechnologyScenario,
+    AnalyzerTriState,
+    AnalyzerUnitText,
+    AnalyzerUtility,
+    AnalyzerVerificationPriority,
+    AnalyzerVerificationStep,
+    analyzer_confidence_band,
+    canonical_analyzer_quantity_value,
+    fingerprint_analyzer_payload,
+)
+from app.engineering.design.analyzer_workflow_models import (
+    ANALYZER_DESIGN_CASE_EXAMPLES,
+    ANALYZER_DESIGN_CASE_REGISTRY,
+    ANALYZER_KNOWLEDGE_LINKS,
+    ANALYZER_KNOWLEDGE_REGISTRY,
+    ANALYZER_WORKFLOW_VERSION,
+    AnalyzerAssessmentEnvelope,
+    AnalyzerDesignCaseExample,
+    AnalyzerExpectedScenario,
+    AnalyzerKnowledgeLink,
+    build_analyzer_example_fingerprint,
+    build_analyzer_integration_fingerprint,
+    resolve_analyzer_knowledge_links,
+    validate_analyzer_design_case_example,
+)
+from app.engineering.design.dp_flow_application_models import (
+    DP_FLOW_APPLICATION_MODEL_VERSION,
+    FINAL_BRAND_DECISION_NOTICE,
+    DPCalculationReadiness,
+    DPConfidenceBand,
+    DPFlowApplicationAssessment,
+    DPFlowApplicationRequest,
+    DPFluidPhase,
+    DPMeasurementObjective,
+    DPOfficialSource,
+    DPOwnershipType,
+    DPPressureLossClass,
+    DPPrimaryElementDefinition,
+    DPPrimaryElementFamily,
+    DPPrimaryElementScenario,
+    DPProprietaryNotice,
+    DPScenarioDisposition,
+    DPTriState,
+    DPVerificationPriority,
+    DPVerificationStep,
+)
+from app.engineering.design.dp_flow_application_wizard import (
+    DEFAULT_DP_FLOW_APPLICATION_WIZARD,
+    DP_FLOW_APPLICATION_RULESET_VERSION,
+    DP_FLOW_APPLICATION_WIZARD_VERSION,
+    GENERIC_PRIMARY_ELEMENTS,
+    OFFICIAL_SOURCES,
+    PRIMARY_ELEMENT_CATALOGUE,
+    PROPRIETARY_PRIMARY_ELEMENTS,
+    VERIFICATION_STEPS,
+    DPFlowApplicationWizard,
+    assess_dp_flow_application,
+)
 from app.engineering.design.level_application_models import (
     LEVEL_APPLICATION_MODEL_VERSION,
-)
-from app.engineering.design.level_application_models import (
     SUPPORTED_LEVEL_CALCULATION_METHOD_IDS,
-)
-from app.engineering.design.level_application_models import (
     SUPPORTED_LEVEL_METHOD_IDS,
-)
-from app.engineering.design.level_application_models import (
+    ApprovalText,
     LevelApplicationAssessment,
-)
-from app.engineering.design.level_application_models import (
     LevelApplicationRequest,
-)
-from app.engineering.design.level_application_models import (
     LevelConditionSeverity,
-)
-from app.engineering.design.level_application_models import LevelConfidenceBand
-from app.engineering.design.level_application_models import (
+    LevelConfidenceBand,
     LevelContactPreference,
-)
-from app.engineering.design.level_application_models import LevelDpArrangement
-from app.engineering.design.level_application_models import (
+    LevelDpArrangement,
     LevelEnvironmentCondition,
-)
-from app.engineering.design.level_application_models import LevelIndustrySector
-from app.engineering.design.level_application_models import (
+    LevelIndustrySector,
     LevelInstallationContext,
-)
-from app.engineering.design.level_application_models import (
     LevelMaintenanceAccess,
-)
-from app.engineering.design.level_application_models import LevelMountingPosition
-from app.engineering.design.level_application_models import (
     LevelMeasurementObjective,
-)
-from app.engineering.design.level_application_models import (
     LevelMeasurementRequirements,
-)
-from app.engineering.design.level_application_models import (
     LevelMissingInformation,
-)
-from app.engineering.design.level_application_models import LevelProcessContext
-from app.engineering.design.level_application_models import LevelProcessPhase
-from app.engineering.design.level_application_models import (
+    LevelMountingPosition,
+    LevelProcessContext,
+    LevelProcessPhase,
     LevelProtectionFunction,
-)
-from app.engineering.design.level_application_models import LevelRuleStatus
-from app.engineering.design.level_application_models import LevelSafetyContext
-from app.engineering.design.level_application_models import (
+    LevelRuleStatus,
+    LevelSafetyContext,
     LevelScenarioDisposition,
-)
-from app.engineering.design.level_application_models import (
     LevelScenarioRuleResult,
-)
-from app.engineering.design.level_application_models import LevelTechnology
-from app.engineering.design.level_application_models import (
+    LevelTechnology,
     LevelTechnologyScenario,
-)
-from app.engineering.design.level_application_models import LevelTriState
-from app.engineering.design.level_application_models import (
+    LevelTriState,
+    LevelVaporBehavior,
     LevelVerificationPriority,
-)
-from app.engineering.design.level_application_models import (
     LevelVerificationStep,
-)
-from app.engineering.design.level_application_models import LevelVaporBehavior
-from app.engineering.design.level_application_models import (
     LevelVesselConfiguration,
-)
-from app.engineering.design.level_application_models import LevelVesselContext
-from app.engineering.design.level_application_models import LevelVesselGeometry
-from app.engineering.design.level_application_models import LevelWizardFinding
-from app.engineering.design.level_application_models import (
+    LevelVesselContext,
+    LevelVesselGeometry,
+    LevelWizardFinding,
     canonical_quantity_value,
 )
 from app.engineering.design.level_application_wizard import (
     DEFAULT_LEVEL_APPLICATION_WIZARD,
-)
-from app.engineering.design.level_application_wizard import (
     LEVEL_APPLICATION_RULESET_VERSION,
-)
-from app.engineering.design.level_application_wizard import (
     LEVEL_APPLICATION_WIZARD_VERSION,
-)
-from app.engineering.design.level_application_wizard import (
     LevelApplicationWizard,
-)
-from app.engineering.design.level_application_wizard import (
     LevelApplicationWizardError,
-)
-from app.engineering.design.level_application_wizard import (
     assess_level_application,
 )
-from app.engineering.design.dp_flow_application_models import DPConfidenceBand
-from app.engineering.design.dp_flow_application_models import DPCalculationReadiness
-from app.engineering.design.dp_flow_application_models import DPFlowApplicationAssessment
-from app.engineering.design.dp_flow_application_models import DPFlowApplicationRequest
-from app.engineering.design.dp_flow_application_models import DPFluidPhase
-from app.engineering.design.dp_flow_application_models import DPMeasurementObjective
-from app.engineering.design.dp_flow_application_models import DPOfficialSource
-from app.engineering.design.dp_flow_application_models import DPOwnershipType
-from app.engineering.design.dp_flow_application_models import DPPressureLossClass
-from app.engineering.design.dp_flow_application_models import DPPrimaryElementDefinition
-from app.engineering.design.dp_flow_application_models import DPPrimaryElementFamily
-from app.engineering.design.dp_flow_application_models import DPPrimaryElementScenario
-from app.engineering.design.dp_flow_application_models import DPProprietaryNotice
-from app.engineering.design.dp_flow_application_models import DPScenarioDisposition
-from app.engineering.design.dp_flow_application_models import DPTriState
-from app.engineering.design.dp_flow_application_models import DPVerificationPriority
-from app.engineering.design.dp_flow_application_models import DPVerificationStep
-from app.engineering.design.dp_flow_application_models import DP_FLOW_APPLICATION_MODEL_VERSION
-from app.engineering.design.dp_flow_application_models import FINAL_BRAND_DECISION_NOTICE
-from app.engineering.design.dp_flow_application_wizard import DEFAULT_DP_FLOW_APPLICATION_WIZARD
-from app.engineering.design.dp_flow_application_wizard import DPFlowApplicationWizard
-from app.engineering.design.dp_flow_application_wizard import DP_FLOW_APPLICATION_RULESET_VERSION
-from app.engineering.design.dp_flow_application_wizard import DP_FLOW_APPLICATION_WIZARD_VERSION
-from app.engineering.design.dp_flow_application_wizard import GENERIC_PRIMARY_ELEMENTS
-from app.engineering.design.dp_flow_application_wizard import OFFICIAL_SOURCES
-from app.engineering.design.dp_flow_application_wizard import PRIMARY_ELEMENT_CATALOGUE
-from app.engineering.design.dp_flow_application_wizard import PROPRIETARY_PRIMARY_ELEMENTS
-from app.engineering.design.dp_flow_application_wizard import VERIFICATION_STEPS
-from app.engineering.design.dp_flow_application_wizard import assess_dp_flow_application
-
 
 PHASE_NUMBER = 7
 PACKAGE_NAME = "engineering_design"
@@ -148,12 +171,82 @@ VOICE_FUNCTIONALITY_ENABLED = False
 
 
 __all__ = [
-    "ApprovalText",
+    "ANALYZER_APPLICATION_MODEL_VERSION",
+    "ANALYZER_ASSISTANT_VERSION",
+    "ANALYZER_DESIGN_CASE_EXAMPLES",
+    "ANALYZER_DESIGN_CASE_REGISTRY",
+    "ANALYZER_KNOWLEDGE_LINKS",
+    "ANALYZER_KNOWLEDGE_REGISTRY",
+    "ANALYZER_RULESET_VERSION",
+    "ANALYZER_TECHNOLOGY_CATALOGUE",
+    "ANALYZER_TECHNOLOGY_REGISTRY",
+    "ANALYZER_TECHNOLOGY_TAXONOMY_VERSION",
+    "ANALYZER_VERIFICATION_STEPS",
+    "ANALYZER_WORKFLOW_VERSION",
+    "DEFAULT_ANALYZER_APPLICATION_ASSISTANT",
     "DEFAULT_DP_FLOW_APPLICATION_WIZARD",
     "DEFAULT_LEVEL_APPLICATION_WIZARD",
+    "DP_FLOW_APPLICATION_MODEL_VERSION",
+    "DP_FLOW_APPLICATION_RULESET_VERSION",
+    "DP_FLOW_APPLICATION_WIZARD_VERSION",
+    "FINAL_BRAND_DECISION_NOTICE",
     "FOUNDATION_VERSION",
-    "DPConfidenceBand",
+    "GENERIC_PRIMARY_ELEMENTS",
+    "LEVEL_APPLICATION_MODEL_VERSION",
+    "LEVEL_APPLICATION_RULESET_VERSION",
+    "LEVEL_APPLICATION_WIZARD_VERSION",
+    "OFFICIAL_SOURCES",
+    "PACKAGE_NAME",
+    "PHASE_NUMBER",
+    "PRIMARY_ELEMENT_CATALOGUE",
+    "PROPRIETARY_PRIMARY_ELEMENTS",
+    "SUPPORTED_LEVEL_CALCULATION_METHOD_IDS",
+    "SUPPORTED_LEVEL_METHOD_IDS",
+    "VERIFICATION_STEPS",
+    "VOICE_FUNCTIONALITY_ENABLED",
+    "AnalyzerAnalyteFamily",
+    "AnalyzerAnalyteRequirement",
+    "AnalyzerApplicationAssessment",
+    "AnalyzerApplicationAssistant",
+    "AnalyzerApplicationAssistantError",
+    "AnalyzerApplicationKind",
+    "AnalyzerApplicationRequest",
+    "AnalyzerAssessmentEnvelope",
+    "AnalyzerConditionSeverity",
+    "AnalyzerConfidenceBand",
+    "AnalyzerDesignCaseExample",
+    "AnalyzerEnvironmentCondition",
+    "AnalyzerExpectedScenario",
+    "AnalyzerInstallationContext",
+    "AnalyzerInterferenceMechanism",
+    "AnalyzerKnowledgeLink",
+    "AnalyzerKnownInterference",
+    "AnalyzerMeasurementObjective",
+    "AnalyzerMeasurementRequirements",
+    "AnalyzerMissingInformation",
+    "AnalyzerProcessContext",
+    "AnalyzerResponseContributorKind",
+    "AnalyzerResponseTimeContributor",
+    "AnalyzerRuleResult",
+    "AnalyzerRuleStatus",
+    "AnalyzerSafetyContext",
+    "AnalyzerSafetyFinding",
+    "AnalyzerSampleApproach",
+    "AnalyzerSampleDisposition",
+    "AnalyzerSamplePhase",
+    "AnalyzerSampleSystemContext",
+    "AnalyzerScenarioDisposition",
+    "AnalyzerTechnology",
+    "AnalyzerTechnologyDefinition",
+    "AnalyzerTechnologyScenario",
+    "AnalyzerTriState",
+    "AnalyzerUnitText",
+    "AnalyzerUtility",
+    "AnalyzerVerificationPriority",
+    "AnalyzerVerificationStep",
+    "ApprovalText",
     "DPCalculationReadiness",
+    "DPConfidenceBand",
     "DPFlowApplicationAssessment",
     "DPFlowApplicationRequest",
     "DPFlowApplicationWizard",
@@ -170,14 +263,6 @@ __all__ = [
     "DPTriState",
     "DPVerificationPriority",
     "DPVerificationStep",
-    "DP_FLOW_APPLICATION_MODEL_VERSION",
-    "DP_FLOW_APPLICATION_RULESET_VERSION",
-    "DP_FLOW_APPLICATION_WIZARD_VERSION",
-    "FINAL_BRAND_DECISION_NOTICE",
-    "GENERIC_PRIMARY_ELEMENTS",
-    "LEVEL_APPLICATION_MODEL_VERSION",
-    "LEVEL_APPLICATION_RULESET_VERSION",
-    "LEVEL_APPLICATION_WIZARD_VERSION",
     "LevelApplicationAssessment",
     "LevelApplicationRequest",
     "LevelApplicationWizard",
@@ -190,10 +275,10 @@ __all__ = [
     "LevelIndustrySector",
     "LevelInstallationContext",
     "LevelMaintenanceAccess",
-    "LevelMountingPosition",
     "LevelMeasurementObjective",
     "LevelMeasurementRequirements",
     "LevelMissingInformation",
+    "LevelMountingPosition",
     "LevelProcessContext",
     "LevelProcessPhase",
     "LevelProtectionFunction",
@@ -204,23 +289,22 @@ __all__ = [
     "LevelTechnology",
     "LevelTechnologyScenario",
     "LevelTriState",
+    "LevelVaporBehavior",
     "LevelVerificationPriority",
     "LevelVerificationStep",
-    "LevelVaporBehavior",
     "LevelVesselConfiguration",
     "LevelVesselContext",
     "LevelVesselGeometry",
     "LevelWizardFinding",
-    "PACKAGE_NAME",
-    "OFFICIAL_SOURCES",
-    "PHASE_NUMBER",
-    "PRIMARY_ELEMENT_CATALOGUE",
-    "PROPRIETARY_PRIMARY_ELEMENTS",
-    "SUPPORTED_LEVEL_CALCULATION_METHOD_IDS",
-    "SUPPORTED_LEVEL_METHOD_IDS",
-    "VOICE_FUNCTIONALITY_ENABLED",
-    "VERIFICATION_STEPS",
+    "analyzer_confidence_band",
+    "assess_analyzer_application",
     "assess_dp_flow_application",
     "assess_level_application",
+    "build_analyzer_example_fingerprint",
+    "build_analyzer_integration_fingerprint",
+    "canonical_analyzer_quantity_value",
     "canonical_quantity_value",
+    "fingerprint_analyzer_payload",
+    "resolve_analyzer_knowledge_links",
+    "validate_analyzer_design_case_example",
 ]

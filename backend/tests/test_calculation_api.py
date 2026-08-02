@@ -5,59 +5,64 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator
 from typing import Any
-from uuid import UUID
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from app.api.calculations import CALCULATION_EXECUTION_PATH
-from app.api.calculations import CalculationApiErrorResponse
-from app.api.calculations import CalculationApiValidationErrorResponse
-from app.api.calculations import CalculationExecutionRequest
-from app.api.calculations import CalculationMethodCatalogue
-from app.api.calculations import CalculationMethodSummary
-from app.api.calculations import CalculationMethodVersionCatalogue
-from app.api.calculations import CalculationRequestBodyLimitMiddleware
-from app.api.calculations import MAX_CALCULATION_REQUEST_BYTES
-from app.api.calculations import MAX_CALCULATION_VALIDATION_ISSUES
-from app.api.calculations import get_calculation_service
-from app.api.calculations import router
-from app.engineering.calculations.engine import CalculationEngine
-from app.engineering.calculations.engine import CalculationEvidenceError
+from app.api.calculations import (
+    CALCULATION_EXECUTION_PATH,
+    MAX_CALCULATION_REQUEST_BYTES,
+    MAX_CALCULATION_VALIDATION_ISSUES,
+    CalculationApiErrorResponse,
+    CalculationApiValidationErrorResponse,
+    CalculationExecutionRequest,
+    CalculationMethodCatalogue,
+    CalculationMethodSummary,
+    CalculationMethodVersionCatalogue,
+    CalculationRequestBodyLimitMiddleware,
+    get_calculation_service,
+    router,
+)
+from app.engineering.calculations.engine import (
+    CalculationEngine,
+    CalculationEvidenceError,
+)
 from app.engineering.calculations.level import ENGINEERING_METHOD_REGISTRY
 from app.engineering.calculations.method_models import (
     CalculationMethodDefinition,
+    EngineCompatibility,
+    MethodExecutionContext,
+    MethodExecutionOutcome,
 )
-from app.engineering.calculations.method_models import EngineCompatibility
-from app.engineering.calculations.method_models import MethodExecutionContext
-from app.engineering.calculations.method_models import MethodExecutionOutcome
-from app.engineering.calculations.models import CalculationInput
-from app.engineering.calculations.models import CalculationRequest
-from app.engineering.calculations.models import CalculationResult
-from app.engineering.calculations.models import CalculationStatus
-from app.engineering.calculations.models import EngineeringQuantity
-from app.engineering.calculations.models import InputOrigin
-from app.engineering.calculations.models import MethodLifecycleStatus
-from app.engineering.calculations.models import MissingCalculationInput
-from app.engineering.calculations.registry import InvalidMethodLookupError
-from app.engineering.calculations.registry import CalculationMethodRegistry
-from app.engineering.calculations.registry import MAX_REGISTERED_METHODS
+from app.engineering.calculations.models import (
+    CalculationInput,
+    CalculationRequest,
+    CalculationResult,
+    CalculationStatus,
+    EngineeringQuantity,
+    InputOrigin,
+    MethodLifecycleStatus,
+    MissingCalculationInput,
+)
 from app.engineering.calculations.registry import (
+    MAX_REGISTERED_METHODS,
+    CalculationMethodRegistry,
+    InvalidMethodLookupError,
     MethodCalculationTypeError,
+    MethodRegistration,
+    UnknownMethodError,
+    UnknownMethodVersionError,
 )
-from app.engineering.calculations.registry import UnknownMethodError
-from app.engineering.calculations.registry import UnknownMethodVersionError
-from app.engineering.calculations.registry import MethodRegistration
 from app.engineering.calculations.units import QuantityKind
-from app.main import app
-from app.main import root
-from app.services.calculation_service import CalculationEvidenceResolutionError
-from app.services.calculation_service import CalculationService
-from app.services.calculation_service import CalculationServiceError
-
+from app.main import app, root
+from app.services.calculation_service import (
+    CalculationEvidenceResolutionError,
+    CalculationService,
+    CalculationServiceError,
+)
 
 METHODS_PATH = "/api/v1/calculations/methods"
 VERSIONS_PATH = "/api/v1/calculations/methods/versions"
@@ -106,6 +111,16 @@ PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH = (
 )
 PRESSURE_RELIEF_EXECUTION_PATH = (
     "/api/v1/calculations/pressure-relief/execute"
+)
+ANALYZER_CATALOGUE_PATH = "/api/v1/calculations/analyzers/catalogue"
+ANALYZER_KNOWLEDGE_LINKS_PATH = (
+    "/api/v1/calculations/analyzers/knowledge-links"
+)
+ANALYZER_DESIGN_CASE_EXAMPLES_PATH = (
+    "/api/v1/calculations/analyzers/design-case-examples"
+)
+ANALYZER_APPLICATION_ASSESSMENT_PATH = (
+    "/api/v1/calculations/analyzers/application-assessment"
 )
 
 
@@ -339,13 +354,17 @@ def test_application_registers_phase_7_calculation_api(
         PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH,
         PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH,
         PRESSURE_RELIEF_EXECUTION_PATH,
+        ANALYZER_CATALOGUE_PATH,
+        ANALYZER_KNOWLEDGE_LINKS_PATH,
+        ANALYZER_DESIGN_CASE_EXAMPLES_PATH,
+        ANALYZER_APPLICATION_ASSESSMENT_PATH,
         "/api/v1/ingestion/jobs/{job_id}/execute",
         "/api/v1/knowledge",
     }.issubset(paths)
 
 
 def test_openapi_freezes_exact_calculation_operations() -> None:
-    """The twenty Phase 7 paths expose only their intended methods."""
+    """The twenty-four Phase 7 paths expose only their intended methods."""
 
     paths = app.openapi()["paths"]
     calculation_paths = {
@@ -375,6 +394,10 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
         PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH,
         PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH,
         PRESSURE_RELIEF_EXECUTION_PATH,
+        ANALYZER_CATALOGUE_PATH,
+        ANALYZER_KNOWLEDGE_LINKS_PATH,
+        ANALYZER_DESIGN_CASE_EXAMPLES_PATH,
+        ANALYZER_APPLICATION_ASSESSMENT_PATH,
     }
     assert set(paths[METHODS_PATH]) == {"get"}
     assert set(paths[VERSIONS_PATH]) == {"get"}
@@ -400,6 +423,10 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert set(paths[PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH]) == {"get"}
     assert set(paths[PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH]) == {"post"}
     assert set(paths[PRESSURE_RELIEF_EXECUTION_PATH]) == {"post"}
+    assert set(paths[ANALYZER_CATALOGUE_PATH]) == {"get"}
+    assert set(paths[ANALYZER_KNOWLEDGE_LINKS_PATH]) == {"get"}
+    assert set(paths[ANALYZER_DESIGN_CASE_EXAMPLES_PATH]) == {"get"}
+    assert set(paths[ANALYZER_APPLICATION_ASSESSMENT_PATH]) == {"post"}
 
     assert paths[METHODS_PATH]["get"]["summary"] == (
         "List controlled calculation methods"
@@ -461,6 +488,18 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert paths[PRESSURE_RELIEF_EXECUTION_PATH]["post"]["summary"] == (
         "Execute an exact pressure-relief calculation"
     )
+    assert paths[ANALYZER_CATALOGUE_PATH]["get"]["summary"] == (
+        "Get analyzer technology catalogue"
+    )
+    assert paths[ANALYZER_KNOWLEDGE_LINKS_PATH]["get"]["summary"] == (
+        "List analyzer knowledge links"
+    )
+    assert paths[ANALYZER_DESIGN_CASE_EXAMPLES_PATH]["get"]["summary"] == (
+        "List analyzer design-case examples"
+    )
+    assert paths[ANALYZER_APPLICATION_ASSESSMENT_PATH]["post"]["summary"] == (
+        "Assess analyzer application"
+    )
     assert paths[METHODS_PATH]["get"]["operationId"] == (
         "listCalculationMethods"
     )
@@ -521,6 +560,18 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert paths[PRESSURE_RELIEF_EXECUTION_PATH]["post"]["operationId"] == (
         "executePressureReliefCalculation"
     )
+    assert paths[ANALYZER_CATALOGUE_PATH]["get"]["operationId"] == (
+        "getAnalyzerTechnologyCatalogue"
+    )
+    assert paths[ANALYZER_KNOWLEDGE_LINKS_PATH]["get"]["operationId"] == (
+        "listAnalyzerKnowledgeLinks"
+    )
+    assert paths[ANALYZER_DESIGN_CASE_EXAMPLES_PATH]["get"]["operationId"] == (
+        "listAnalyzerDesignCaseExamples"
+    )
+    assert paths[ANALYZER_APPLICATION_ASSESSMENT_PATH]["post"]["operationId"] == (
+        "assessAnalyzerApplication"
+    )
 
 
 def test_openapi_documents_exact_response_contracts() -> None:
@@ -577,6 +628,23 @@ def test_openapi_documents_exact_response_contracts() -> None:
             "422",
             "503",
         }
+    for analyzer_path in (
+        ANALYZER_CATALOGUE_PATH,
+        ANALYZER_KNOWLEDGE_LINKS_PATH,
+        ANALYZER_DESIGN_CASE_EXAMPLES_PATH,
+    ):
+        assert set(paths[analyzer_path]["get"]["responses"]) == {
+            "200",
+            "422",
+            "503",
+        }
+    assert set(paths[ANALYZER_APPLICATION_ASSESSMENT_PATH]["post"]["responses"]) == {
+        "200",
+        "400",
+        "413",
+        "422",
+        "503",
+    }
 
     execute_response = paths[EXECUTE_PATH]["post"]["responses"]["200"]
     assert execute_response["content"]["application/json"]["schema"] == {
@@ -587,6 +655,12 @@ def test_openapi_documents_exact_response_contracts() -> None:
     ]
     assert assessment_response["content"]["application/json"]["schema"] == {
         "$ref": "#/components/schemas/LevelApplicationAssessment"
+    }
+    analyzer_response = paths[ANALYZER_APPLICATION_ASSESSMENT_PATH]["post"][
+        "responses"
+    ]["200"]
+    assert analyzer_response["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/AnalyzerAssessmentEnvelope"
     }
     definition_response = paths[DEFINITION_PATH]["get"]["responses"]["200"]
     assert definition_response["content"]["application/json"]["schema"] == {
@@ -1193,8 +1267,10 @@ def test_invalid_queries_never_call_the_service(
         ),
         (
             DEFINITION_PATH,
-            "method_id=general/identity&method_version=1.0.0"
-            "&method_version=2.0.0",
+            (
+                "method_id=general/identity&method_version=1.0.0"
+                "&method_version=2.0.0"
+            ),
         ),
         (EXECUTE_PATH, "unexpected=SECRET-DO-NOT-REFLECT"),
     ],
