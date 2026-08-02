@@ -20,11 +20,12 @@ from app.api.level_applications import (
 from app.api.level_applications import router as level_application_router
 from app.api.manufacturers import router as manufacturer_router
 from app.api.measurements import router as measurement_router
+from app.api.pressure_relief import PressureReliefRequestBodyLimitMiddleware
+from app.api.pressure_relief import router as pressure_relief_router
 from app.api.product_families import router as product_family_router
 from app.api.products import router as product_router
 from app.api.protocol import router as protocol_router
 from app.api.selections import router as selection_router
-
 
 APPLICATION_VERSION = "0.10.0"
 
@@ -41,6 +42,7 @@ app.add_middleware(CalculationRequestBodyLimitMiddleware)
 app.add_middleware(LevelApplicationRequestBodyLimitMiddleware)
 app.add_middleware(DPFlowRequestBodyLimitMiddleware)
 app.add_middleware(ControlValveRequestBodyLimitMiddleware)
+app.add_middleware(PressureReliefRequestBodyLimitMiddleware)
 
 
 @app.get(
@@ -132,5 +134,10 @@ app.include_router(
 
 app.include_router(
     control_valve_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    pressure_relief_router,
     prefix="/api/v1",
 )

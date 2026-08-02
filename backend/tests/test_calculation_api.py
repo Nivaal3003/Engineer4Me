@@ -95,6 +95,18 @@ CONTROL_VALVE_EXECUTION_PATH = (
 CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH = (
     "/api/v1/calculations/control-valves/design-cases/evaluate"
 )
+PRESSURE_RELIEF_CATALOGUE_PATH = (
+    "/api/v1/calculations/pressure-relief/catalogue"
+)
+PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH = (
+    "/api/v1/calculations/pressure-relief/knowledge-links"
+)
+PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH = (
+    "/api/v1/calculations/pressure-relief/readiness-assessment"
+)
+PRESSURE_RELIEF_EXECUTION_PATH = (
+    "/api/v1/calculations/pressure-relief/execute"
+)
 
 
 def api_integration_executor(
@@ -323,13 +335,17 @@ def test_application_registers_phase_7_calculation_api(
         CONTROL_VALVE_KNOWLEDGE_LINKS_PATH,
         CONTROL_VALVE_EXECUTION_PATH,
         CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH,
+        PRESSURE_RELIEF_CATALOGUE_PATH,
+        PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH,
+        PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH,
+        PRESSURE_RELIEF_EXECUTION_PATH,
         "/api/v1/ingestion/jobs/{job_id}/execute",
         "/api/v1/knowledge",
     }.issubset(paths)
 
 
 def test_openapi_freezes_exact_calculation_operations() -> None:
-    """The sixteen Phase 7 paths expose only their intended methods."""
+    """The twenty Phase 7 paths expose only their intended methods."""
 
     paths = app.openapi()["paths"]
     calculation_paths = {
@@ -355,6 +371,10 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
         CONTROL_VALVE_KNOWLEDGE_LINKS_PATH,
         CONTROL_VALVE_EXECUTION_PATH,
         CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH,
+        PRESSURE_RELIEF_CATALOGUE_PATH,
+        PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH,
+        PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH,
+        PRESSURE_RELIEF_EXECUTION_PATH,
     }
     assert set(paths[METHODS_PATH]) == {"get"}
     assert set(paths[VERSIONS_PATH]) == {"get"}
@@ -376,6 +396,10 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert set(paths[CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH]) == {
         "post"
     }
+    assert set(paths[PRESSURE_RELIEF_CATALOGUE_PATH]) == {"get"}
+    assert set(paths[PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH]) == {"get"}
+    assert set(paths[PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH]) == {"post"}
+    assert set(paths[PRESSURE_RELIEF_EXECUTION_PATH]) == {"post"}
 
     assert paths[METHODS_PATH]["get"]["summary"] == (
         "List controlled calculation methods"
@@ -425,6 +449,18 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert paths[CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH]["post"][
         "summary"
     ] == "Evaluate a stateless control-valve design case"
+    assert paths[PRESSURE_RELIEF_CATALOGUE_PATH]["get"]["summary"] == (
+        "Get pressure-relief catalogue"
+    )
+    assert paths[PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH]["get"]["summary"] == (
+        "List pressure-relief knowledge links"
+    )
+    assert paths[PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH]["post"][
+        "summary"
+    ] == "Assess pressure-relief readiness"
+    assert paths[PRESSURE_RELIEF_EXECUTION_PATH]["post"]["summary"] == (
+        "Execute an exact pressure-relief calculation"
+    )
     assert paths[METHODS_PATH]["get"]["operationId"] == (
         "listCalculationMethods"
     )
@@ -473,6 +509,18 @@ def test_openapi_freezes_exact_calculation_operations() -> None:
     assert paths[CONTROL_VALVE_DESIGN_CASE_EVALUATION_PATH]["post"][
         "operationId"
     ] == "evaluateControlValveDesignCase"
+    assert paths[PRESSURE_RELIEF_CATALOGUE_PATH]["get"]["operationId"] == (
+        "getPressureReliefCatalogue"
+    )
+    assert paths[PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH]["get"][
+        "operationId"
+    ] == "listPressureReliefKnowledgeLinks"
+    assert paths[PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH]["post"][
+        "operationId"
+    ] == "assessPressureReliefReadiness"
+    assert paths[PRESSURE_RELIEF_EXECUTION_PATH]["post"]["operationId"] == (
+        "executePressureReliefCalculation"
+    )
 
 
 def test_openapi_documents_exact_response_contracts() -> None:
@@ -506,6 +554,29 @@ def test_openapi_documents_exact_response_contracts() -> None:
         "422",
         "503",
     }
+    assert set(paths[PRESSURE_RELIEF_CATALOGUE_PATH]["get"]["responses"]) == {
+        "200",
+        "422",
+        "503",
+    }
+    assert set(
+        paths[PRESSURE_RELIEF_KNOWLEDGE_LINKS_PATH]["get"]["responses"]
+    ) == {
+        "200",
+        "422",
+        "503",
+    }
+    for pressure_relief_path in (
+        PRESSURE_RELIEF_READINESS_ASSESSMENT_PATH,
+        PRESSURE_RELIEF_EXECUTION_PATH,
+    ):
+        assert set(paths[pressure_relief_path]["post"]["responses"]) == {
+            "200",
+            "400",
+            "413",
+            "422",
+            "503",
+        }
 
     execute_response = paths[EXECUTE_PATH]["post"]["responses"]["200"]
     assert execute_response["content"]["application/json"]["schema"] == {

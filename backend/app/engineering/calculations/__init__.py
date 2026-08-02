@@ -34,6 +34,19 @@ coherence, and preliminary bulk-Mach noise-review priority. Wet steam and
 two-phase flow fail closed; no sound-pressure level, API, persistence, product
 selection, or standards-conformity claim is added.
 
+Step 103 adds the fail-closed pressure-relief scenario and standards-lifecycle
+foundation. It records jurisdiction, pressure basis, credible relief scenario,
+required relieving rate, phase-dependent properties, and independent reviewer
+competency without executing a sizing equation. The API 520/521 and ISO 4126
+families remain inert discovery records until their separately reviewed method
+packs satisfy the technical, safety, standards, and approval gates.
+
+Step 104 adds three independently reviewed generic SI required-area methods
+for confirmed nonflashing liquid, single-phase gas or vapour, and eligible
+choked dry or superheated steam. Every capacity factor and applicability basis
+is caller-supplied and traceable. The methods calculate no rated device size,
+perform no product selection, and make no API, ISO, or legal conformity claim.
+
 Pressure basis and volumetric-flow reference conditions remain explicit.
 Voice functionality is outside Phase 7 and remains scheduled for Phase 10.
 """
@@ -354,6 +367,90 @@ from app.engineering.calculations.models import (
     TraceStepStatus,
     VerificationRequirement,
 )
+from app.engineering.calculations.pressure_relief import (
+    API_520_521_STANDARDS_PACK,
+    API_520_521_STANDARDS_PACK_ID,
+    ISO_4126_STANDARDS_PACK,
+    ISO_4126_STANDARDS_PACK_ID,
+    PRESSURE_RELIEF_COMPETENCY_REQUIREMENT,
+    PRESSURE_RELIEF_DISCOVERY_ENTRIES,
+    PRESSURE_RELIEF_EXECUTABLE_ADAPTERS,
+    PRESSURE_RELIEF_FOUNDATION_VERSION,
+    PRESSURE_RELIEF_METHOD_IMPLEMENTATIONS,
+    PRESSURE_RELIEF_METHOD_REGISTRY,
+    PRESSURE_RELIEF_MISSING_COMPETENCY_FINDING_ID,
+    PRESSURE_RELIEF_MISSING_FLOW_BASIS_FINDING_ID,
+    PRESSURE_RELIEF_MISSING_JURISDICTION_FINDING_ID,
+    PRESSURE_RELIEF_MISSING_PRESSURE_BASIS_FINDING_ID,
+    PRESSURE_RELIEF_MISSING_PROPERTIES_FINDING_ID,
+    PRESSURE_RELIEF_MISSING_SCENARIO_FINDING_ID,
+    PRESSURE_RELIEF_REQUIRED_REVIEWER_COMPETENCY,
+    PRESSURE_RELIEF_STANDARDS_PACK_REGISTRY,
+    PRESSURE_RELIEF_STANDARDS_PACK_VERSION,
+    PRESSURE_RELIEF_UNAPPROVED_METHOD_FINDING_ID,
+    PressureReliefCompetencyRequirement,
+    PressureReliefError,
+    PressureReliefFlowBasis,
+    PressureReliefFluidPhase,
+    PressureReliefFluidProperties,
+    PressureReliefInputError,
+    PressureReliefJurisdictionBasis,
+    PressureReliefPressureBasis,
+    PressureReliefPressureBasisKind,
+    PressureReliefReadinessFindingCode,
+    PressureReliefReadinessRequest,
+    PressureReliefSafetyFinding,
+    PressureReliefSafetyGateResult,
+    PressureReliefScenarioBasis,
+    PressureReliefScenarioKind,
+    PressureReliefStandardsFamily,
+    PressureReliefStandardsPackMetadata,
+    assess_pressure_relief_readiness,
+    fingerprint_pressure_relief_readiness,
+)
+from app.engineering.calculations.pressure_relief_required_area import (
+    ELIGIBLE_STEAM_PRESSURE_RELIEF_REQUIRED_AREA_ADAPTER,
+    ELIGIBLE_STEAM_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_ID,
+    ELIGIBLE_STEAM_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_VERSION,
+    GAS_VAPOUR_PRESSURE_RELIEF_REQUIRED_AREA_ADAPTER,
+    GAS_VAPOUR_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_ID,
+    GAS_VAPOUR_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_VERSION,
+    LIQUID_PRESSURE_RELIEF_REQUIRED_AREA_ADAPTER,
+    LIQUID_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_ID,
+    LIQUID_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_VERSION,
+    PRESSURE_RELIEF_REQUIRED_AREA_CALCULATORS_VERSION,
+    PRESSURE_RELIEF_REQUIRED_AREA_EXECUTABLE_ADAPTERS,
+    PRESSURE_RELIEF_REQUIRED_AREA_METHOD_IMPLEMENTATIONS,
+    PRESSURE_RELIEF_REQUIRED_AREA_METHOD_REGISTRY,
+    PRESSURE_RELIEF_REQUIRED_AREA_METHOD_VERSION,
+    UNIVERSAL_GAS_CONSTANT_J_KMOL_K,
+    WATER_CRITICAL_PRESSURE_PA,
+    EligiblePressureReliefSteamState,
+    EligibleSteamPressureReliefRequiredAreaInput,
+    EligibleSteamPressureReliefRequiredAreaResult,
+    GasVapourPressureReliefRequiredAreaInput,
+    GasVapourPressureReliefRequiredAreaResult,
+    LiquidPressureReliefRequiredAreaInput,
+    LiquidPressureReliefRequiredAreaResult,
+    PressureReliefRequiredAreaAuthorization,
+    PressureReliefRequiredAreaBlockedError,
+    PressureReliefRequiredAreaCase,
+    PressureReliefRequiredAreaError,
+    PressureReliefRequiredAreaFlowRegime,
+    PressureReliefRequiredAreaInputError,
+    PressureReliefRequiredAreaMethodMetadata,
+    ResolvedPressureReliefPressureState,
+    TraceableGasVapourReliefApplicability,
+    TraceableLiquidReliefApplicability,
+    TraceableReliefAreaCoefficients,
+    TraceableSteamFlowCoefficient,
+    build_pressure_relief_required_area_input_fingerprint_payload,
+    build_pressure_relief_required_area_result_fingerprint_payload,
+    calculate_eligible_steam_pressure_relief_required_area,
+    calculate_gas_vapour_pressure_relief_required_area,
+    calculate_liquid_pressure_relief_required_area,
+    execute_pressure_relief_required_area,
+)
 from app.engineering.calculations.registry import (
     DEFAULT_METHOD_REGISTRY,
     MAX_REGISTERED_METHODS,
@@ -456,6 +553,34 @@ if (
 ):
     raise RuntimeError("control-valve pack registries are inconsistent")
 
+PRESSURE_RELIEF_PACK_VERSION = "1.1.0"
+PRESSURE_RELIEF_PACK_EXECUTABLE_ADAPTERS = (
+    *PRESSURE_RELIEF_EXECUTABLE_ADAPTERS,
+    *PRESSURE_RELIEF_REQUIRED_AREA_EXECUTABLE_ADAPTERS,
+)
+PRESSURE_RELIEF_PACK_METHOD_REGISTRY = MappingProxyType(
+    {
+        **PRESSURE_RELIEF_METHOD_REGISTRY,
+        **PRESSURE_RELIEF_REQUIRED_AREA_METHOD_REGISTRY,
+    }
+)
+PRESSURE_RELIEF_PACK_METHOD_IMPLEMENTATIONS = MappingProxyType(
+    {
+        **PRESSURE_RELIEF_METHOD_IMPLEMENTATIONS,
+        **PRESSURE_RELIEF_REQUIRED_AREA_METHOD_IMPLEMENTATIONS,
+    }
+)
+PRESSURE_RELIEF_PACK_DISCOVERY_ENTRIES = PRESSURE_RELIEF_DISCOVERY_ENTRIES
+if len(PRESSURE_RELIEF_PACK_METHOD_REGISTRY) != len(
+    PRESSURE_RELIEF_PACK_EXECUTABLE_ADAPTERS
+):
+    raise RuntimeError("duplicate exact-version pressure-relief pack registration")
+if (
+    PRESSURE_RELIEF_PACK_METHOD_REGISTRY.keys()
+    != PRESSURE_RELIEF_PACK_METHOD_IMPLEMENTATIONS.keys()
+):
+    raise RuntimeError("pressure-relief pack registries are inconsistent")
+
 
 PHASE_NUMBER = 7
 PACKAGE_NAME = "engineering_calculations"
@@ -464,6 +589,8 @@ EXECUTABLE_METHODS_ENABLED = True
 
 
 __all__ = [
+    "API_520_521_STANDARDS_PACK",
+    "API_520_521_STANDARDS_PACK_ID",
     "ATTEMPT_FINGERPRINT_SCHEMA",
     "COMPRESSIBLE_CONTROL_VALVE_CALCULATORS_VERSION",
     "COMPRESSIBLE_CONTROL_VALVE_DISCOVERY_ENTRIES",
@@ -506,6 +633,9 @@ __all__ = [
     "DP_TRANSMITTER_RANGE_ADAPTER",
     "DP_TRANSMITTER_RANGE_METHOD_ID",
     "DP_TRANSMITTER_RANGE_METHOD_VERSION",
+    "ELIGIBLE_STEAM_PRESSURE_RELIEF_REQUIRED_AREA_ADAPTER",
+    "ELIGIBLE_STEAM_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_ID",
+    "ELIGIBLE_STEAM_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_VERSION",
     "ENGINEERING_CALCULATION_ENGINE",
     "ENGINEERING_METHOD_IDS",
     "ENGINEERING_METHOD_REGISTRATIONS",
@@ -520,6 +650,9 @@ __all__ = [
     "EXECUTABLE_METHODS_ENABLED",
     "FINGERPRINT_SCHEMA",
     "FOUNDATION_VERSION",
+    "GAS_VAPOUR_PRESSURE_RELIEF_REQUIRED_AREA_ADAPTER",
+    "GAS_VAPOUR_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_ID",
+    "GAS_VAPOUR_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_VERSION",
     "GENERAL_CALCULATION_ENGINE",
     "GENERAL_CALCULATION_TYPE_PREFIX",
     "GENERAL_CALCULATORS_VERSION",
@@ -553,6 +686,8 @@ __all__ = [
     "INSTALLED_CONTROL_VALVE_METHOD_REGISTRY",
     "INSTALLED_CONTROL_VALVE_SCREEN_ADAPTER",
     "INSTALLED_CONTROL_VALVE_SCREEN_METHOD_ID",
+    "ISO_4126_STANDARDS_PACK",
+    "ISO_4126_STANDARDS_PACK_ID",
     "ISO_5167_2_ADAPTER",
     "ISO_5167_2_ADAPTER_ID",
     "ISO_5167_3_ADAPTER",
@@ -570,6 +705,9 @@ __all__ = [
     "LIQUID_CONTROL_VALVE_SIZING_ADAPTER",
     "LIQUID_CONTROL_VALVE_SIZING_METHOD_ID",
     "LIQUID_CONTROL_VALVE_SIZING_METHOD_VERSION",
+    "LIQUID_PRESSURE_RELIEF_REQUIRED_AREA_ADAPTER",
+    "LIQUID_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_ID",
+    "LIQUID_PRESSURE_RELIEF_REQUIRED_AREA_METHOD_VERSION",
     "MAX_ENGINE_ITERATIONS",
     "MAX_REGISTERED_METHODS",
     "MAX_SAFETY_TRIGGERS",
@@ -579,8 +717,36 @@ __all__ = [
     "PERMANENT_PRESSURE_LOSS_METHOD_ID",
     "PERMANENT_PRESSURE_LOSS_METHOD_VERSION",
     "PHASE_NUMBER",
+    "PRESSURE_RELIEF_COMPETENCY_REQUIREMENT",
+    "PRESSURE_RELIEF_DISCOVERY_ENTRIES",
+    "PRESSURE_RELIEF_EXECUTABLE_ADAPTERS",
+    "PRESSURE_RELIEF_FOUNDATION_VERSION",
+    "PRESSURE_RELIEF_METHOD_IMPLEMENTATIONS",
+    "PRESSURE_RELIEF_METHOD_REGISTRY",
+    "PRESSURE_RELIEF_MISSING_COMPETENCY_FINDING_ID",
+    "PRESSURE_RELIEF_MISSING_FLOW_BASIS_FINDING_ID",
+    "PRESSURE_RELIEF_MISSING_JURISDICTION_FINDING_ID",
+    "PRESSURE_RELIEF_MISSING_PRESSURE_BASIS_FINDING_ID",
+    "PRESSURE_RELIEF_MISSING_PROPERTIES_FINDING_ID",
+    "PRESSURE_RELIEF_MISSING_SCENARIO_FINDING_ID",
+    "PRESSURE_RELIEF_PACK_DISCOVERY_ENTRIES",
+    "PRESSURE_RELIEF_PACK_EXECUTABLE_ADAPTERS",
+    "PRESSURE_RELIEF_PACK_METHOD_IMPLEMENTATIONS",
+    "PRESSURE_RELIEF_PACK_METHOD_REGISTRY",
+    "PRESSURE_RELIEF_PACK_VERSION",
+    "PRESSURE_RELIEF_REQUIRED_AREA_CALCULATORS_VERSION",
+    "PRESSURE_RELIEF_REQUIRED_AREA_EXECUTABLE_ADAPTERS",
+    "PRESSURE_RELIEF_REQUIRED_AREA_METHOD_IMPLEMENTATIONS",
+    "PRESSURE_RELIEF_REQUIRED_AREA_METHOD_REGISTRY",
+    "PRESSURE_RELIEF_REQUIRED_AREA_METHOD_VERSION",
+    "PRESSURE_RELIEF_REQUIRED_REVIEWER_COMPETENCY",
+    "PRESSURE_RELIEF_STANDARDS_PACK_REGISTRY",
+    "PRESSURE_RELIEF_STANDARDS_PACK_VERSION",
+    "PRESSURE_RELIEF_UNAPPROVED_METHOD_FINDING_ID",
     "SAFETY_EVALUATION_FAILED_FINDING_ID",
     "SAFETY_EVALUATION_FAILED_VERIFICATION_ID",
+    "UNIVERSAL_GAS_CONSTANT_J_KMOL_K",
+    "WATER_CRITICAL_PRESSURE_PA",
     "AerodynamicNoisePriority",
     "AerodynamicNoiseScreenResult",
     "ApplicabilityEvaluator",
@@ -631,6 +797,9 @@ __all__ = [
     "DPFlowUncertaintyResult",
     "DPTransmitterRangeScreenResult",
     "DuplicateMethodRegistrationError",
+    "EligiblePressureReliefSteamState",
+    "EligibleSteamPressureReliefRequiredAreaInput",
+    "EligibleSteamPressureReliefRequiredAreaResult",
     "EligibleSteamState",
     "EngineCompatibility",
     "EngineeringQuantity",
@@ -641,6 +810,8 @@ __all__ = [
     "FlowReferenceConditions",
     "FlowingFluidProperties",
     "FormulaMetadata",
+    "GasVapourPressureReliefRequiredAreaInput",
+    "GasVapourPressureReliefRequiredAreaResult",
     "GeneralCalculationDomainError",
     "GeneralCalculationError",
     "GeneralCalculationInputError",
@@ -679,6 +850,8 @@ __all__ = [
     "LiquidControlValveProperties",
     "LiquidControlValveSizingInput",
     "LiquidControlValveSizingResult",
+    "LiquidPressureReliefRequiredAreaInput",
+    "LiquidPressureReliefRequiredAreaResult",
     "LiquidValveFlowRegime",
     "LiquidValveRegimeResult",
     "LiquidValveVelocityResult",
@@ -712,6 +885,30 @@ __all__ = [
     "PressureBasisError",
     "PressureLevelRangeResult",
     "PressureLimitScreenResult",
+    "PressureReliefCompetencyRequirement",
+    "PressureReliefError",
+    "PressureReliefFlowBasis",
+    "PressureReliefFluidPhase",
+    "PressureReliefFluidProperties",
+    "PressureReliefInputError",
+    "PressureReliefJurisdictionBasis",
+    "PressureReliefPressureBasis",
+    "PressureReliefPressureBasisKind",
+    "PressureReliefReadinessFindingCode",
+    "PressureReliefReadinessRequest",
+    "PressureReliefRequiredAreaAuthorization",
+    "PressureReliefRequiredAreaBlockedError",
+    "PressureReliefRequiredAreaCase",
+    "PressureReliefRequiredAreaError",
+    "PressureReliefRequiredAreaFlowRegime",
+    "PressureReliefRequiredAreaInputError",
+    "PressureReliefRequiredAreaMethodMetadata",
+    "PressureReliefSafetyFinding",
+    "PressureReliefSafetyGateResult",
+    "PressureReliefScenarioBasis",
+    "PressureReliefScenarioKind",
+    "PressureReliefStandardsFamily",
+    "PressureReliefStandardsPackMetadata",
     "QuantityKind",
     "RangeabilityStatus",
     "ReferenceConditionError",
@@ -719,6 +916,7 @@ __all__ = [
     "ReferenceType",
     "ReferencedVolumetricFlow",
     "RelativeUncertaintyComponent",
+    "ResolvedPressureReliefPressureState",
     "SafetyEvaluationContext",
     "SafetyEvaluationError",
     "SafetyEvaluator",
@@ -734,9 +932,13 @@ __all__ = [
     "TraceableCoefficient",
     "TraceableCompressibleValveFactors",
     "TraceableDownstreamAcousticState",
+    "TraceableGasVapourReliefApplicability",
     "TraceableInstalledValveCandidate",
+    "TraceableLiquidReliefApplicability",
     "TraceableLiquidValveFactors",
     "TraceableMachLimit",
+    "TraceableReliefAreaCoefficients",
+    "TraceableSteamFlowCoefficient",
     "TraceableTravelCapacityPoint",
     "TraceableVelocityLimit",
     "TransmitterRangeResult",
@@ -758,18 +960,24 @@ __all__ = [
     "assess_dp_transmitter_range",
     "assess_generic_orifice_applicability",
     "assess_liquid_control_valve_regime",
+    "assess_pressure_relief_readiness",
     "build_attempt_fingerprint_payload",
     "build_compressible_control_valve_input_fingerprint_payload",
     "build_compressible_control_valve_result_fingerprint_payload",
     "build_fingerprint_payload",
     "build_liquid_control_valve_input_fingerprint_payload",
     "build_liquid_control_valve_result_fingerprint_payload",
+    "build_pressure_relief_required_area_input_fingerprint_payload",
+    "build_pressure_relief_required_area_result_fingerprint_payload",
+    "calculate_eligible_steam_pressure_relief_required_area",
+    "calculate_gas_vapour_pressure_relief_required_area",
     "calculate_generic_averaging_pitot_flow",
     "calculate_generic_circular_restriction_flow",
     "calculate_generic_nozzle_flow",
     "calculate_generic_orifice_flow",
     "calculate_generic_venturi_nozzle_flow",
     "calculate_generic_venturi_tube_flow",
+    "calculate_liquid_pressure_relief_required_area",
     "calculate_permanent_pressure_loss",
     "canonical_compressible_control_valve_fingerprint_bytes",
     "canonical_control_valve_fingerprint_bytes",
@@ -791,9 +999,11 @@ __all__ = [
     "dry_leg_dp_range",
     "dynamic_viscosity_from_kinematic",
     "evaluate_installed_control_valve_scenarios",
+    "execute_pressure_relief_required_area",
     "fingerprint_compressible_control_valve_payload",
     "fingerprint_control_valve_payload",
     "fingerprint_payload",
+    "fingerprint_pressure_relief_readiness",
     "flow_fraction_from_square_root_signal",
     "format_quantity_value",
     "horizontal_cylindrical_tank_volume",
