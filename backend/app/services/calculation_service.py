@@ -35,6 +35,7 @@ from app.engineering.calculations.method_models import (
 )
 from app.engineering.calculations.models import CalculationRequest
 from app.engineering.calculations.models import CalculationResult
+from app.engineering.calculations.models import CalculationModel
 
 
 EvidenceResolver = Callable[
@@ -60,6 +61,15 @@ class CalculationEvidenceResolutionError(CalculationServiceError):
         super().__init__(
             "Trusted calculation evidence could not be resolved."
         )
+
+
+class ControlledCalculationExecution(CalculationModel):
+    """Server-owned result with the exact evidence visible to the engine."""
+
+    request: CalculationRequest
+    definition: CalculationMethodDefinition
+    evidence: TrustedExecutionEvidence
+    result: CalculationResult
 
 
 def _default_evidence_resolver(
@@ -236,11 +246,11 @@ class CalculationService:
         )
         return _fresh_model(CalculationMethodDefinition, definition)
 
-    def execute(
+    def execute_controlled(
         self,
         request: CalculationRequest,
-    ) -> CalculationResult:
-        """Resolve trusted evidence and execute one exact validated request."""
+    ) -> ControlledCalculationExecution:
+        """Execute and retain the exact merged evidence for durable records."""
 
         validated_request = _fresh_model(CalculationRequest, request)
         definition = self._engine.registry.resolve(
@@ -280,7 +290,41 @@ class CalculationService:
             validated_request,
             evidence=validated_evidence,
         )
-        return _fresh_model(CalculationResult, result)
+        validated_result = _fresh_model(CalculationResult, result)
+        merged_evidence = TrustedExecutionEvidence(
+            references=(
+                *validated_definition.references,
+                *tuple(
+                    sorted(
+                        validated_evidence.references,
+                        key=lambda item: item.reference_id.casefold(),
+                    )
+                ),
+            ),
+            verification_requirements=(
+                *validated_definition.verification_requirements,
+                *tuple(
+                    sorted(
+                        validated_evidence.verification_requirements,
+                        key=lambda item: item.verification_id.casefold(),
+                    )
+                ),
+            ),
+        )
+        return ControlledCalculationExecution(
+            request=validated_request,
+            definition=validated_definition,
+            evidence=merged_evidence,
+            result=validated_result,
+        )
+
+    def execute(
+        self,
+        request: CalculationRequest,
+    ) -> CalculationResult:
+        """Preserve the Step 100 result-only service contract."""
+
+        return self.execute_controlled(request).result
 
 
 DEFAULT_CALCULATION_SERVICE: Final = CalculationService(
@@ -292,6 +336,7 @@ __all__ = [
     "CalculationEvidenceResolutionError",
     "CalculationService",
     "CalculationServiceError",
+    "ControlledCalculationExecution",
     "DEFAULT_CALCULATION_SERVICE",
     "EvidenceResolver",
 ]

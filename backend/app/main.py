@@ -8,6 +8,9 @@ from app.api.control_valves import ControlValveRequestBodyLimitMiddleware
 from app.api.control_valves import router as control_valve_router
 from app.api.dp_flow import DPFlowRequestBodyLimitMiddleware
 from app.api.dp_flow import router as dp_flow_router
+from app.api.designs import DesignRequestBodyLimitMiddleware
+from app.api.designs import router as design_router
+from app.api.datasheets import router as datasheet_router
 from app.api.filesystem_document_execution_api import (
     router as filesystem_document_execution_router,
 )
@@ -36,8 +39,7 @@ app = FastAPI(
     title="Engineer4Me API",
     version=APPLICATION_VERSION,
     description=(
-        "Vendor-neutral engineering knowledge platform "
-        "for process instrumentation."
+        "Vendor-neutral engineering knowledge platform for process instrumentation."
     ),
 )
 app.add_middleware(CalculationRequestBodyLimitMiddleware)
@@ -46,6 +48,7 @@ app.add_middleware(DPFlowRequestBodyLimitMiddleware)
 app.add_middleware(ControlValveRequestBodyLimitMiddleware)
 app.add_middleware(PressureReliefRequestBodyLimitMiddleware)
 app.add_middleware(AnalyzerRequestBodyLimitMiddleware)
+app.add_middleware(DesignRequestBodyLimitMiddleware)
 
 
 @app.get(
@@ -147,5 +150,15 @@ app.include_router(
 
 app.include_router(
     analyzer_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    design_router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    datasheet_router,
     prefix="/api/v1",
 )

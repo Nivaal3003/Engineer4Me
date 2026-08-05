@@ -9,3 +9,9 @@ from .solution import Solution
 from .protocol import Protocol
 from .product_protocol import product_protocols
 from .product import Product
+from .design_case import DesignCase
+from .design_case import DesignCaseRevision
+from .calculation_run import CalculationRun
+from .engineering_datasheet import EngineeringDatasheet
+from .engineering_datasheet import EngineeringDatasheetCalculationLink
+from .engineering_datasheet import EngineeringDatasheetRevision
