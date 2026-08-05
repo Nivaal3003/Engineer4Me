@@ -127,7 +127,10 @@ def _finite_number(
         return None
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise TypeError(f"{field_name} must be a finite real number")
-    normalized = float(value)
+    try:
+        normalized = float(value)
+    except (OverflowError, TypeError, ValueError) as exc:
+        raise ValueError(f"{field_name} must be a finite real number") from exc
     if not isfinite(normalized):
         raise ValueError(f"{field_name} must be a finite real number")
     return 0.0 if normalized == 0.0 else normalized

@@ -11,6 +11,8 @@ from hashlib import sha256
 import json
 from typing import Final
 
+from pydantic import ValidationError
+
 from app.engineering.design.dp_flow_application_models import DPConfidenceBand
 from app.engineering.design.dp_flow_application_models import DPCalculationReadiness
 from app.engineering.design.dp_flow_application_models import DPFlowApplicationAssessment
@@ -444,6 +446,20 @@ VERIFICATION_STEPS: Final = (
 
 
 def assess_dp_flow_application(request: DPFlowApplicationRequest) -> DPFlowApplicationAssessment:
+    if not isinstance(request, DPFlowApplicationRequest):
+        raise TypeError("request must be a DPFlowApplicationRequest")
+    try:
+        request = DPFlowApplicationRequest.model_validate(
+            request.model_dump(
+                mode="python",
+                round_trip=True,
+                warnings="error",
+            )
+        )
+    except (TypeError, ValueError, ValidationError) as error:
+        raise ValueError(
+            "request failed controlled DPFlowApplicationRequest validation"
+        ) from error
     catalogue = PRIMARY_ELEMENT_CATALOGUE if request.include_proprietary_variants else GENERIC_PRIMARY_ELEMENTS
     screened = tuple(_screen(option, request) for option in catalogue)
     generic_viable = [item for item in screened if item.option.ownership_type is DPOwnershipType.GENERIC_TECHNOLOGY and item.disposition is DPScenarioDisposition.VIABLE]

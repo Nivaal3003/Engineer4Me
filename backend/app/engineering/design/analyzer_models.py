@@ -10,9 +10,11 @@ integration around these Step 106 domain contracts.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 from enum import StrEnum
 from hashlib import sha256
+from math import isfinite
 from typing import Annotated, Literal, Self
 
 from pydantic import (
@@ -34,6 +36,7 @@ from app.engineering.calculations.models import (
     FingerprintText,
     Identifier,
     LongText,
+    MAX_ABSOLUTE_OPTION_NUMBER,
     ShortText,
     TextItem,
     VersionText,
@@ -1295,6 +1298,16 @@ class AnalyzerTechnologyScenario(CalculationModel):
 def analyzer_confidence_band(score: float) -> AnalyzerConfidenceBand:
     """Return the fixed confidence band for a bounded score."""
 
+    if isinstance(score, bool) or not isinstance(score, (int, float)):
+        raise TypeError("analyzer confidence score must be a finite number")
+    try:
+        score = float(score)
+    except (OverflowError, TypeError, ValueError) as error:
+        raise ValueError(
+            "analyzer confidence score must be a finite number"
+        ) from error
+    if not isfinite(score) or not 0.0 <= score <= 100.0:
+        raise ValueError("analyzer confidence score must be from zero through 100")
     return (
         AnalyzerConfidenceBand.VERY_LOW
         if score < 20.0
@@ -1314,16 +1327,57 @@ def fingerprint_analyzer_payload(value: object) -> str:
     if isinstance(value, CalculationModel):
         value = value.model_dump(mode="json", round_trip=True, warnings="error")
 
-    def canonicalize(item: object) -> object:
+    active_containers: set[int] = set()
+
+    def canonicalize(item: object, *, depth: int = 0) -> object:
         """Normalize JSON-equivalent values before deterministic hashing."""
 
-        if isinstance(item, float) and item == 0.0:
-            return 0.0
-        if isinstance(item, dict):
-            return {key: canonicalize(nested) for key, nested in item.items()}
+        if depth > 64:
+            raise ValueError("analyzer fingerprint payload nesting is too deep")
+        if item is None or isinstance(item, (str, bool)):
+            return item
+        if isinstance(item, int) and not isinstance(item, bool):
+            if abs(item) > MAX_ABSOLUTE_OPTION_NUMBER:
+                raise ValueError(
+                    "analyzer fingerprint integer exceeds the supported range"
+                )
+            return item
+        if isinstance(item, float):
+            if not isfinite(item) or abs(item) > MAX_ABSOLUTE_OPTION_NUMBER:
+                raise ValueError(
+                    "analyzer fingerprint number must be finite and bounded"
+                )
+            return 0.0 if item == 0.0 else item
+        if isinstance(item, Mapping):
+            if not all(isinstance(key, str) for key in item):
+                raise ValueError(
+                    "analyzer fingerprint mapping keys must be strings"
+                )
+            identity = id(item)
+            if identity in active_containers:
+                raise ValueError("analyzer fingerprint payload cannot be cyclic")
+            active_containers.add(identity)
+            try:
+                return {
+                    key: canonicalize(nested, depth=depth + 1)
+                    for key, nested in item.items()
+                }
+            finally:
+                active_containers.remove(identity)
         if isinstance(item, (list, tuple)):
-            return [canonicalize(nested) for nested in item]
-        return item
+            identity = id(item)
+            if identity in active_containers:
+                raise ValueError("analyzer fingerprint payload cannot be cyclic")
+            active_containers.add(identity)
+            try:
+                return [
+                    canonicalize(nested, depth=depth + 1) for nested in item
+                ]
+            finally:
+                active_containers.remove(identity)
+        raise ValueError(
+            "analyzer fingerprint payload contains an unsupported value"
+        )
 
     payload = json.dumps(
         canonicalize(value),

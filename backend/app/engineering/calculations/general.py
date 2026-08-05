@@ -220,17 +220,22 @@ def _finite_number(
 ) -> float:
     """Return one strict finite, bounded, non-boolean number."""
 
-    if (
-        isinstance(value, bool)
-        or not isinstance(value, (int, float))
-        or not isfinite(float(value))
-        or abs(float(value)) > _MAXIMUM_MAGNITUDE
-    ):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise GeneralCalculationInputError(
+            f"{field_name} must be a finite supported number."
+        )
+    try:
+        normalized = float(value)
+    except (OverflowError, TypeError, ValueError) as exc:
+        raise GeneralCalculationInputError(
+            f"{field_name} must be a finite supported number."
+        ) from exc
+    if not isfinite(normalized) or abs(normalized) > _MAXIMUM_MAGNITUDE:
         raise GeneralCalculationInputError(
             f"{field_name} must be a finite supported number."
         )
 
-    return float(value)
+    return normalized
 
 
 def _finite_result(

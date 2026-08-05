@@ -14,9 +14,9 @@ from __future__ import annotations
 
 from math import hypot, isfinite, pi, sqrt
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import Final, Literal, TypeVar
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, ValidationError, field_validator, model_validator
 
 from app.engineering.calculations.models import CalculationModel
 from app.engineering.calculations.models import MethodLifecycleStatus
@@ -55,6 +55,33 @@ class DPFlowInputError(DPFlowCalculationError):
 
 class DPFlowConvergenceError(DPFlowCalculationError):
     """Raised when a bounded bore solver cannot establish a result."""
+
+
+_ModelT = TypeVar("_ModelT", bound=CalculationModel)
+
+
+def _revalidate_model(
+    model_type: type[_ModelT],
+    value: object,
+    *,
+    field_name: str,
+) -> _ModelT:
+    """Return a fresh trusted nested model at every public kernel boundary."""
+
+    if not isinstance(value, model_type):
+        raise DPFlowInputError(f"{field_name} must use the validated model")
+    try:
+        return model_type.model_validate(
+            value.model_dump(
+                mode="python",
+                round_trip=True,
+                warnings="error",
+            )
+        )
+    except (TypeError, ValueError, ValidationError) as error:
+        raise DPFlowInputError(
+            f"{field_name} failed controlled model validation"
+        ) from error
 
 
 def _finite_number(value: object, *, field_name: str) -> float:
@@ -424,12 +451,36 @@ def assess_generic_orifice_applicability(
         normalized_scalars[name] = normalized
         if normalized <= 0.0:
             reasons.append(f"{name} must be finite and positive")
-    if not isinstance(fluid, FlowingFluidProperties):
+    validated_discharge_coefficient = None
+    validated_expansibility_factor = None
+    try:
+        _revalidate_model(
+            FlowingFluidProperties,
+            fluid,
+            field_name="fluid",
+        )
+    except DPFlowInputError:
         reasons.append("fluid must be validated flowing-fluid properties")
-    if not isinstance(discharge_coefficient, TraceableCoefficient):
-        reasons.append("discharge coefficient must include validated traceability")
-    if not isinstance(expansibility_factor, TraceableCoefficient):
-        reasons.append("expansibility factor must include validated traceability")
+    try:
+        validated_discharge_coefficient = _revalidate_model(
+            TraceableCoefficient,
+            discharge_coefficient,
+            field_name="discharge coefficient",
+        )
+    except DPFlowInputError:
+        reasons.append(
+            "discharge coefficient must include validated traceability"
+        )
+    try:
+        validated_expansibility_factor = _revalidate_model(
+            TraceableCoefficient,
+            expansibility_factor,
+            field_name="expansibility factor",
+        )
+    except DPFlowInputError:
+        reasons.append(
+            "expansibility factor must include validated traceability"
+        )
     beta = None
     if (
         len(normalized_scalars) == len(scalars)
@@ -443,9 +494,15 @@ def assess_generic_orifice_applicability(
         )
         if not 0.0 < beta < 1.0:
             reasons.append("bore diameter must be smaller than pipe inside diameter")
-    if isinstance(expansibility_factor, TraceableCoefficient) and expansibility_factor.value > 1.0:
+    if (
+        validated_expansibility_factor is not None
+        and validated_expansibility_factor.value > 1.0
+    ):
         reasons.append("expansibility factor cannot exceed 1.0")
-    if isinstance(discharge_coefficient, TraceableCoefficient) and discharge_coefficient.value > 2.0:
+    if (
+        validated_discharge_coefficient is not None
+        and validated_discharge_coefficient.value > 2.0
+    ):
         warnings.append("supplied discharge coefficient is unusually high and requires review")
     warnings.append("This generic supplied-coefficient kernel does not establish standards conformity")
     return DPFlowApplicability(
@@ -467,6 +524,21 @@ def calculate_generic_orifice_flow(
 ) -> OrificeFlowResult:
     """Evaluate the generic restriction equation with supplied coefficients."""
 
+    fluid = _revalidate_model(
+        FlowingFluidProperties,
+        fluid,
+        field_name="fluid",
+    )
+    discharge_coefficient = _revalidate_model(
+        TraceableCoefficient,
+        discharge_coefficient,
+        field_name="discharge coefficient",
+    )
+    expansibility_factor = _revalidate_model(
+        TraceableCoefficient,
+        expansibility_factor,
+        field_name="expansibility factor",
+    )
     applicability = assess_generic_orifice_applicability(
         pipe_inside_diameter_m=pipe_inside_diameter_m,
         bore_diameter_m=bore_diameter_m,
@@ -641,12 +713,21 @@ def calculate_generic_averaging_pitot_flow(
     )
     if pipe_inside_diameter_m <= 0.0 or differential_pressure_pa <= 0.0:
         raise DPFlowInputError("pipe diameter and differential pressure must be finite and positive")
-    if not isinstance(fluid, FlowingFluidProperties):
-        raise DPFlowInputError("fluid must be validated flowing-fluid properties")
-    if not isinstance(meter_coefficient, TraceableCoefficient):
-        raise DPFlowInputError("meter coefficient must include validated traceability")
-    if not isinstance(expansibility_factor, TraceableCoefficient):
-        raise DPFlowInputError("expansibility factor must include validated traceability")
+    fluid = _revalidate_model(
+        FlowingFluidProperties,
+        fluid,
+        field_name="fluid",
+    )
+    meter_coefficient = _revalidate_model(
+        TraceableCoefficient,
+        meter_coefficient,
+        field_name="meter coefficient",
+    )
+    expansibility_factor = _revalidate_model(
+        TraceableCoefficient,
+        expansibility_factor,
+        field_name="expansibility factor",
+    )
     if expansibility_factor.value > 1.0:
         raise DPFlowInputError("expansibility factor cannot exceed 1.0")
     pipe_area = pi * pipe_inside_diameter_m * pipe_inside_diameter_m / 4.0
@@ -789,8 +870,11 @@ def calculate_permanent_pressure_loss(
     )
     if measured_differential_pressure_pa < 0.0:
         raise DPFlowInputError("measured differential pressure must be finite and nonnegative")
-    if not isinstance(permanent_loss_ratio, TraceableCoefficient):
-        raise DPFlowInputError("permanent loss ratio must include validated traceability")
+    permanent_loss_ratio = _revalidate_model(
+        TraceableCoefficient,
+        permanent_loss_ratio,
+        field_name="permanent loss ratio",
+    )
     if permanent_loss_ratio.value > 1.0:
         raise DPFlowInputError("permanent loss ratio cannot exceed 1.0")
     loss = _finite_number(
@@ -818,8 +902,14 @@ def combine_dp_flow_relative_uncertainty(
         raise DPFlowInputError("uncertainty components must be an ordered tuple")
     if not components or len(components) > 64:
         raise DPFlowInputError("one through 64 uncertainty components are required")
-    if any(not isinstance(component, RelativeUncertaintyComponent) for component in components):
-        raise DPFlowInputError("every uncertainty component must use the validated component model")
+    components = tuple(
+        _revalidate_model(
+            RelativeUncertaintyComponent,
+            component,
+            field_name=f"uncertainty component {index}",
+        )
+        for index, component in enumerate(components, start=1)
+    )
     ids = tuple(component.component_id.casefold() for component in components)
     if len(ids) != len(set(ids)):
         raise DPFlowInputError("uncertainty component identifiers must be unique")

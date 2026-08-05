@@ -314,14 +314,14 @@ class NumericApplicabilityRange(CalculationModel):
     def contains(self, value: int | float) -> bool:
         """Return whether a finite non-boolean value is inside the range."""
 
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, (int, float))
-            or not isfinite(float(value))
-        ):
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
             return False
-
-        numeric_value = float(value)
+        try:
+            numeric_value = float(value)
+        except (OverflowError, TypeError, ValueError):
+            return False
+        if not isfinite(numeric_value):
+            return False
 
         if self.minimum is not None:
             if self.minimum_inclusive:
