@@ -15,3 +15,8 @@ from .calculation_run import CalculationRun
 from .engineering_datasheet import EngineeringDatasheet
 from .engineering_datasheet import EngineeringDatasheetCalculationLink
 from .engineering_datasheet import EngineeringDatasheetRevision
+from .security_identity import SecurityEntitlementSnapshot
+from .security_identity import SecurityOrganisation
+from .security_identity import SecurityOrganisationMembership
+from .security_identity import SecurityUser
+from .security_audit import SecurityAuditRecord
