@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "document_control": {
+    "document_id": "E4M-P9-ARCH-001",
+    "title": "Engineer4Me Phase 9 Architecture Baseline",
+    "version": "1.0",
+    "owner": "Engineer4Me product owner",
+    "technical_reviewer": "controlled_review_pending",
+    "approval_status": "controlled_inception_baseline_not_production_deployment_conformity_or_operational_approval",
+    "effective_date": "2026-08-30",
+    "review_date": "before_phase_9_closure"
+  },
+  "phase": {
+    "number": 9,
+    "title": "Mobile-First Product Experience & Frontend Integration",
+    "branch": "feature/phase-9",
+    "parent_branch": "feature/phase-8",
+    "parent_commit": "c7599bb22a1beee62340830f239643bca1a9a41b",
+    "parent_tree": "7bd59235a781207c98a6bec79202f93f8b28d7c2",
+    "phase8_closure_scope": "source_repository_and_verification_only",
+    "step279_contract_id": "7ff374a3e14dfa81613274c4b7171d0954297c040fa6d77350b0cf5902780807",
+    "step279_plan_sha256": "344f1d5c20c855de28e85a33bccccf8ee75bb7daa0f0cf2eb70347e1634aa6f6"
+  },
+  "frontend_architecture": {
+    "application_model": "client_side_static_browser_spa",
+    "framework_family": "react_19",
+    "dom_family": "react_dom_19",
+    "build_tool_family": "vite_8",
+    "language": "strict_typescript",
+    "module_system": "esm",
+    "package_manager": "npm_only",
+    "lockfile": "package_lock_v3",
+    "routing": "browser_history_with_controlled_static_fallback",
+    "server_side_rendering": false,
+    "react_server_components": false,
+    "node_production_application_server": false
+  },
+  "backend_boundary": {
+    "api": "separate_fastapi_service",
+    "typed_client_required": true,
+    "single_controlled_api_transport_required": true,
+    "evidence_and_traceability_retained_end_to_end": true
+  },
+  "authentication_boundary": {
+    "state_at_inception": "inactive",
+    "msal_integration": "direct_public_client_application",
+    "msal_react_allowed_initially": false,
+    "cache_location_initial": "session_storage",
+    "custom_system_network_client_count": 1,
+    "msal_default_network_transport_allowed": false,
+    "activation_requires_separate_reviewed_gates": [
+      "configuration",
+      "redirect",
+      "origin",
+      "cors",
+      "csp",
+      "network_client",
+      "pkce",
+      "callback",
+      "token_handling",
+      "logout"
+    ]
+  },
+  "security_invariants": [
+    "fail_closed_identity_role_entitlement_and_access_boundaries",
+    "bearer_tokens_only_on_approved_protected_routes",
+    "no_tokens_in_urls_logs_local_storage_or_user_visible_diagnostics",
+    "no_uncontrolled_external_requests_in_isolated_tests",
+    "phase8_security_boundary_must_not_be_weakened"
+  ],
+  "product_invariants": [
+    "mobile_first",
+    "wcag_2_2_aa_target",
+    "keyboard_accessible",
+    "screen_reader_compatible",
+    "minimum_product_interaction_target_44_pixels",
+    "evidence_assumptions_limitations_confidence_revision_and_approval_visible",
+    "vendor_neutral",
+    "no_best_brand_selection_for_user",
+    "final_engineering_approval_user_owned",
+    "standards_conformity_not_claimed_by_ui",
+    "operational_authorization_user_owned"
+  ],
+  "connectivity_boundary": {
+    "online_offline_degraded_state_visible": true,
+    "service_worker_enabled_initially": false,
+    "pwa_caching_enabled_initially": false,
+    "background_sync_enabled_initially": false
+  },
+  "packaging_boundary": {
+    "native_android_packaging_authorized": false,
+    "native_ios_packaging_authorized": false
+  },
+  "voice_boundary": {
+    "phase9_authorized": false,
+    "disposition": "deferred_to_phase_10"
+  },
+  "step280_repository_payload": [
+    "docs/09_Product_Experience/README.md",
+    "docs/09_Product_Experience/PHASE9-INCEPTION-RECORD.md",
+    "docs/09_Product_Experience/PHASE9-ARCHITECTURE-BASELINE.json",
+    "docs/09_Product_Experience/PHASE9-IMPLEMENTATION-PLAN.md"
+  ],
+  "next_controlled_action": {
+    "step": 281,
+    "title": "Exact frontend/backend architecture and API inventory",
+    "later_numeric_allocation": "unfrozen_until_inventory_acceptance"
+  }
+}
