@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { installE2eNetworkControl } from "./network-control";
+
+test.beforeEach(async ({ page }) => {
+  await installE2eNetworkControl(page);
+});
 
 test("renders the inactive Engineer4Me security bootstrap", async ({ page }) => {
   await page.goto("/");
