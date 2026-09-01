@@ -1,25 +1,38 @@
-import { CAPABILITY_AREAS, type CapabilityAreaDefinition } from "../foundation";
+import { APP_ROUTES, type AppRouteDefinition } from "../routing";
 
-export type ShellNavigationState = "current" | "planned" | "controlled";
+export type ShellNavigationState =
+  | "available"
+  | "protected"
+  | "entitled"
+  | "controlled";
 
-export interface ShellNavigationItem extends CapabilityAreaDefinition {
+export interface ShellNavigationItem extends AppRouteDefinition {
   readonly state: ShellNavigationState;
-  readonly inPageTarget: string | null;
+  readonly stateLabel: string;
 }
 
 export const SHELL_NAVIGATION_ITEMS: readonly ShellNavigationItem[] = Object.freeze(
-  CAPABILITY_AREAS.map((area): ShellNavigationItem => ({
-    ...area,
-    state:
-      area.id === "home"
-        ? "current"
-        : area.availability === "controlled_administration"
-          ? "controlled"
-          : "planned",
-    inPageTarget: area.id === "home" ? "#main-content" : null,
-  })),
+  APP_ROUTES.map((route): ShellNavigationItem => {
+    const state: ShellNavigationState =
+      route.accessRequirement === "public"
+        ? "available"
+        : route.accessRequirement === "authenticated"
+          ? "protected"
+          : route.accessRequirement === "entitled"
+            ? "entitled"
+            : "controlled";
+    const stateLabel =
+      state === "available"
+        ? "Available"
+        : state === "protected"
+          ? "Protected"
+          : state === "entitled"
+            ? "Entitled"
+            : "Controlled";
+    return Object.freeze({ ...route, state, stateLabel });
+  }),
 );
 
-export function currentNavigationItems(): readonly ShellNavigationItem[] {
-  return SHELL_NAVIGATION_ITEMS.filter((item) => item.state === "current");
+export function navigationItemByPath(path: string): ShellNavigationItem | null {
+  return SHELL_NAVIGATION_ITEMS.find((item) => item.path === path) ?? null;
 }

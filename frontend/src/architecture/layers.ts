@@ -1,13 +1,10 @@
-/**
- * Static source-layer ownership for the Engineer4Me frontend.
- *
- * This contract is intentionally independent of browser routing, API transport,
- * authentication activation, service workers, native packaging, and voice.
- */
+/** Static source-layer ownership for the Engineer4Me frontend. */
 export const SOURCE_LAYERS = [
   "entrypoint",
   "application",
   "shell",
+  "routing",
+  "state_experience",
   "product_ui",
   "design_system",
   "architecture",
@@ -21,16 +18,20 @@ export type SourceLayer = (typeof SOURCE_LAYERS)[number];
 export const SOURCE_LAYER_DEPENDENCIES: Readonly<
   Record<SourceLayer, readonly SourceLayer[]>
 > = Object.freeze({
-  entrypoint: ["application", "foundation", "authentication"],
+  entrypoint: ["application", "routing", "foundation", "authentication"],
   application: [
     "shell",
+    "routing",
+    "state_experience",
     "product_ui",
     "design_system",
     "architecture",
     "foundation",
     "authentication",
   ],
-  shell: ["shell", "product_ui", "design_system", "foundation"],
+  shell: ["shell", "routing", "product_ui", "design_system", "foundation"],
+  routing: ["routing", "foundation"],
+  state_experience: ["state_experience", "design_system", "foundation"],
   product_ui: ["product_ui", "design_system", "foundation"],
   design_system: ["design_system", "foundation"],
   architecture: ["architecture", "foundation"],
@@ -72,6 +73,14 @@ export function classifySourceModule(path: string): SourceLayer {
 
   if (normalized.includes("/product-ui/")) {
     return "product_ui";
+  }
+
+  if (normalized.includes("/state-experience/")) {
+    return "state_experience";
+  }
+
+  if (normalized.includes("/routing/")) {
+    return "routing";
   }
 
   if (normalized.includes("/shell/")) {

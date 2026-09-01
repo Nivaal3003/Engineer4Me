@@ -9,6 +9,8 @@ describe("Engineer4Me frontend source-layer contract", () => {
     expect(classifySourceModule("src/main.tsx")).toBe("entrypoint");
     expect(classifySourceModule("src/App.tsx")).toBe("application");
     expect(classifySourceModule("src/shell/AppShell.tsx")).toBe("shell");
+    expect(classifySourceModule("src/routing/routes.ts")).toBe("routing");
+    expect(classifySourceModule("src/state-experience/StateExperience.tsx")).toBe("state_experience");
     expect(classifySourceModule("src/product-ui/EvidencePanel.tsx")).toBe("product_ui");
     expect(classifySourceModule("src/design-system/tokens.ts")).toBe("design_system");
     expect(classifySourceModule("src/architecture/layers.ts")).toBe("architecture");
@@ -17,31 +19,24 @@ describe("Engineer4Me frontend source-layer contract", () => {
     expect(classifySourceModule("src/App.test.tsx")).toBe("test");
   });
 
-  it("allows application code to compose shell, product UI, foundation, and auth", () => {
-    expect(isSourceDependencyAllowed("src/App.tsx", "src/shell/AppShell.tsx")).toBe(true);
-    expect(isSourceDependencyAllowed("src/App.tsx", "src/product-ui/EvidencePanel.tsx")).toBe(true);
-    expect(isSourceDependencyAllowed("src/App.tsx", "src/foundation/status.ts")).toBe(true);
-    expect(isSourceDependencyAllowed("src/App.tsx", "src/auth/config.ts")).toBe(true);
+  it("allows application and shell code to compose the controlled routing layers", () => {
+    expect(isSourceDependencyAllowed("src/App.tsx", "src/routing/routes.ts")).toBe(true);
+    expect(isSourceDependencyAllowed("src/App.tsx", "src/state-experience/StateExperience.tsx")).toBe(true);
+    expect(isSourceDependencyAllowed("src/shell/AppShell.tsx", "src/routing/RouteLifecycle.tsx")).toBe(true);
   });
 
-  it("fails closed when design-system code attempts to depend on auth", () => {
-    const result = evaluateSourceDependency(
-      "src/design-system/primitives.tsx",
-      "src/auth/config.ts",
-    );
-    expect(result).toMatchObject({
-      fromLayer: "design_system",
-      toLayer: "authentication",
-      allowed: false,
-    });
-  });
-
-  it("permits test code to inspect every source layer", () => {
+  it("keeps routing and state experience independent of authentication activation", () => {
     expect(
-      isSourceDependencyAllowed(
-        "src/shell/AppShell.test.tsx",
-        "src/auth/config.ts",
-      ),
-    ).toBe(true);
+      evaluateSourceDependency("src/routing/access.ts", "src/auth/config.ts"),
+    ).toMatchObject({ fromLayer: "routing", toLayer: "authentication", allowed: false });
+    expect(
+      evaluateSourceDependency("src/state-experience/models.ts", "src/auth/config.ts"),
+    ).toMatchObject({ fromLayer: "state_experience", toLayer: "authentication", allowed: false });
+  });
+
+  it("fails closed when design-system code attempts to depend on routing", () => {
+    expect(
+      evaluateSourceDependency("src/design-system/primitives.tsx", "src/routing/routes.ts"),
+    ).toMatchObject({ fromLayer: "design_system", toLayer: "routing", allowed: false });
   });
 });

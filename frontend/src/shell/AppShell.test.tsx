@@ -1,45 +1,59 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router";
 import { AppShell } from "./AppShell";
 
-describe("Engineer4Me mobile-first product shell", () => {
-  it("provides semantic landmarks and a main-content skip target", () => {
-    render(
+function renderShell(initialEntry = "/") {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
       <AppShell authenticationLabel="Blocked" connectivityLabel="unknown">
         <h1>Workspace</h1>
-      </AppShell>,
-    );
+      </AppShell>
+    </MemoryRouter>,
+  );
+}
+
+describe("Engineer4Me mobile-first routed product shell", () => {
+  it("provides semantic landmarks, route navigation, and a main-content skip target", () => {
+    renderShell();
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Skip to main content" })).toHaveAttribute("href", "#main-content");
+
+    const desktopNavigation = screen.getByRole("navigation", { name: "Desktop product navigation" });
+    expect(within(desktopNavigation).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
+    expect(within(desktopNavigation).getByRole("link", { name: "Selection & sizing" })).toHaveAttribute("href", "/selection");
   });
 
-  it("opens and closes mobile navigation without activating browser routing", async () => {
+  it("opens, routes from, and closes mobile navigation", async () => {
     const user = userEvent.setup();
-    render(
-      <AppShell authenticationLabel="Blocked" connectivityLabel="unknown">
-        <h1>Workspace</h1>
-      </AppShell>,
-    );
-    const navigation = screen.getByRole("navigation", { hidden: true });
+    renderShell();
+    const navigation = document.getElementById("mobile-product-navigation");
+    if (!navigation) {
+      throw new Error("Mobile product navigation is missing.");
+    }
     expect(navigation).toHaveAttribute("aria-label", "Mobile product navigation");
     expect(navigation).not.toBeVisible();
 
     const openButton = screen.getByRole("button", { name: "Open navigation" });
-    expect(openButton).toHaveAttribute("aria-expanded", "false");
     await user.click(openButton);
+    expect(screen.getByRole("navigation", { name: "Mobile product navigation" })).toBeVisible();
 
-    const visibleNavigation = screen.getByRole("navigation", { name: "Mobile product navigation" });
-    expect(visibleNavigation).toBe(navigation);
-    expect(navigation).toBeVisible();
-
-    const closeButton = screen.getByRole("button", { name: "Close navigation" });
-    expect(closeButton).toHaveAttribute("aria-expanded", "true");
-    await user.click(closeButton);
-
+    await user.click(within(navigation).getByRole("link", { name: "Selection & sizing" }));
     expect(navigation).not.toBeVisible();
-    expect(screen.getByRole("navigation", { hidden: true })).toBe(navigation);
     expect(screen.getByRole("button", { name: "Open navigation" })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("closes mobile navigation with Escape and restores toggle focus", async () => {
+    const user = userEvent.setup();
+    renderShell();
+    const openButton = screen.getByRole("button", { name: "Open navigation" });
+    await user.click(openButton);
+    const navigation = screen.getByRole("navigation", { name: "Mobile product navigation" });
+    navigation.focus();
+    await user.keyboard("{Escape}");
+    expect(navigation).not.toBeVisible();
+    expect(openButton).toHaveFocus();
   });
 });
