@@ -9,6 +9,8 @@ export const SOURCE_LAYERS = [
   "design_system",
   "architecture",
   "foundation",
+  "contracts",
+  "api",
   "authentication",
   "test",
 ] as const;
@@ -27,6 +29,8 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
     "design_system",
     "architecture",
     "foundation",
+    "contracts",
+    "api",
     "authentication",
   ],
   shell: ["shell", "routing", "product_ui", "design_system", "foundation"],
@@ -34,9 +38,11 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
   state_experience: ["state_experience", "design_system", "foundation"],
   product_ui: ["product_ui", "design_system", "foundation"],
   design_system: ["design_system", "foundation"],
-  architecture: ["architecture", "foundation"],
+  architecture: ["architecture", "foundation", "contracts"],
   foundation: ["foundation"],
-  authentication: ["foundation", "authentication"],
+  contracts: ["contracts", "foundation"],
+  api: ["api", "contracts", "foundation"],
+  authentication: ["authentication", "api", "contracts", "foundation"],
   test: SOURCE_LAYERS,
 });
 
@@ -65,6 +71,14 @@ export function classifySourceModule(path: string): SourceLayer {
 
   if (normalized.includes("/foundation/")) {
     return "foundation";
+  }
+
+  if (normalized.includes("/contracts/")) {
+    return "contracts";
+  }
+
+  if (normalized.includes("/api/")) {
+    return "api";
   }
 
   if (normalized.includes("/design-system/")) {

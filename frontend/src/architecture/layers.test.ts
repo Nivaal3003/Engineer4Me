@@ -15,28 +15,30 @@ describe("Engineer4Me frontend source-layer contract", () => {
     expect(classifySourceModule("src/design-system/tokens.ts")).toBe("design_system");
     expect(classifySourceModule("src/architecture/layers.ts")).toBe("architecture");
     expect(classifySourceModule("src/foundation/evidence.ts")).toBe("foundation");
+    expect(classifySourceModule("src/contracts/evidence.ts")).toBe("contracts");
+    expect(classifySourceModule("src/api/transport.ts")).toBe("api");
     expect(classifySourceModule("src/auth/config.ts")).toBe("authentication");
-    expect(classifySourceModule("src/App.test.tsx")).toBe("test");
+    expect(classifySourceModule("src/api/transport.test.ts")).toBe("test");
   });
 
-  it("allows application and shell code to compose the controlled routing layers", () => {
-    expect(isSourceDependencyAllowed("src/App.tsx", "src/routing/routes.ts")).toBe(true);
-    expect(isSourceDependencyAllowed("src/App.tsx", "src/state-experience/StateExperience.tsx")).toBe(true);
-    expect(isSourceDependencyAllowed("src/shell/AppShell.tsx", "src/routing/RouteLifecycle.tsx")).toBe(true);
+  it("allows application code to consume the controlled API and contract layers", () => {
+    expect(isSourceDependencyAllowed("src/App.tsx", "src/api/index.ts")).toBe(true);
+    expect(isSourceDependencyAllowed("src/App.tsx", "src/contracts/index.ts")).toBe(true);
   });
 
-  it("keeps routing and state experience independent of authentication activation", () => {
+  it("keeps the API core independent of authentication implementation and UI layers", () => {
     expect(
-      evaluateSourceDependency("src/routing/access.ts", "src/auth/config.ts"),
-    ).toMatchObject({ fromLayer: "routing", toLayer: "authentication", allowed: false });
+      evaluateSourceDependency("src/api/transport.ts", "src/auth/config.ts"),
+    ).toMatchObject({ fromLayer: "api", toLayer: "authentication", allowed: false });
     expect(
-      evaluateSourceDependency("src/state-experience/models.ts", "src/auth/config.ts"),
-    ).toMatchObject({ fromLayer: "state_experience", toLayer: "authentication", allowed: false });
+      evaluateSourceDependency("src/api/transport.ts", "src/routing/routes.ts"),
+    ).toMatchObject({ fromLayer: "api", toLayer: "routing", allowed: false });
+    expect(
+      evaluateSourceDependency("src/contracts/evidence.ts", "src/api/transport.ts"),
+    ).toMatchObject({ fromLayer: "contracts", toLayer: "api", allowed: false });
   });
 
-  it("fails closed when design-system code attempts to depend on routing", () => {
-    expect(
-      evaluateSourceDependency("src/design-system/primitives.tsx", "src/routing/routes.ts"),
-    ).toMatchObject({ fromLayer: "design_system", toLayer: "routing", allowed: false });
+  it("permits a future authentication adapter to implement the approved API token seam", () => {
+    expect(isSourceDependencyAllowed("src/auth/provider.ts", "src/api/token.ts")).toBe(true);
   });
 });
