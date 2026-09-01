@@ -7,6 +7,9 @@
 export const SOURCE_LAYERS = [
   "entrypoint",
   "application",
+  "shell",
+  "product_ui",
+  "design_system",
   "architecture",
   "foundation",
   "authentication",
@@ -19,7 +22,17 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
   Record<SourceLayer, readonly SourceLayer[]>
 > = Object.freeze({
   entrypoint: ["application", "foundation", "authentication"],
-  application: ["architecture", "foundation", "authentication"],
+  application: [
+    "shell",
+    "product_ui",
+    "design_system",
+    "architecture",
+    "foundation",
+    "authentication",
+  ],
+  shell: ["shell", "product_ui", "design_system", "foundation"],
+  product_ui: ["product_ui", "design_system", "foundation"],
+  design_system: ["design_system", "foundation"],
   architecture: ["architecture", "foundation"],
   foundation: ["foundation"],
   authentication: ["foundation", "authentication"],
@@ -51,6 +64,18 @@ export function classifySourceModule(path: string): SourceLayer {
 
   if (normalized.includes("/foundation/")) {
     return "foundation";
+  }
+
+  if (normalized.includes("/design-system/")) {
+    return "design_system";
+  }
+
+  if (normalized.includes("/product-ui/")) {
+    return "product_ui";
+  }
+
+  if (normalized.includes("/shell/")) {
+    return "shell";
   }
 
   if (normalized.includes("/auth/")) {
