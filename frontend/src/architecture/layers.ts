@@ -5,6 +5,7 @@ export const SOURCE_LAYERS = [
   "shell",
   "routing",
   "workspace",
+  "capabilities",
   "state_experience",
   "product_ui",
   "design_system",
@@ -26,6 +27,7 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
     "shell",
     "routing",
     "workspace",
+    "capabilities",
     "state_experience",
     "product_ui",
     "design_system",
@@ -39,6 +41,7 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
   routing: ["routing", "foundation", "authentication"],
   workspace: [
     "workspace",
+    "capabilities",
     "routing",
     "state_experience",
     "product_ui",
@@ -48,6 +51,7 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
     "api",
     "authentication",
   ],
+  capabilities: ["capabilities", "api", "contracts", "foundation"],
   state_experience: ["state_experience", "design_system", "foundation"],
   product_ui: ["product_ui", "design_system", "foundation"],
   design_system: ["design_system", "foundation"],
@@ -78,6 +82,7 @@ export function classifySourceModule(path: string): SourceLayer {
   if (normalized.includes("/design-system/")) return "design_system";
   if (normalized.includes("/product-ui/")) return "product_ui";
   if (normalized.includes("/state-experience/")) return "state_experience";
+  if (normalized.includes("/capabilities/")) return "capabilities";
   if (normalized.includes("/workspaces/")) return "workspace";
   if (normalized.includes("/routing/")) return "routing";
   if (normalized.includes("/shell/")) return "shell";

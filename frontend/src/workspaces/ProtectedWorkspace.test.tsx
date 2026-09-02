@@ -23,5 +23,6 @@ it("renders a fail-closed protected workspace without protected data", () => {
   );
   expect(screen.getByRole("heading", { name: "Selection & sizing is not available" })).toBeInTheDocument();
   expect(screen.getByText("Authentication execution has not been activated.")).toBeInTheDocument();
+  expect(screen.getByText(/22 accepted backend operations are allocated for in-memory contract verification only/)).toBeInTheDocument();
   expect(screen.getByText(/No engineering result, organisational record, or protected data/)).toBeInTheDocument();
 });
