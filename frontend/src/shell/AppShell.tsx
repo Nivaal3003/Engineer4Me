@@ -7,6 +7,9 @@ import { SHELL_NAVIGATION_ITEMS } from "./navigation";
 export interface AppShellProps extends PropsWithChildren {
   readonly authenticationLabel: string;
   readonly connectivityLabel: string;
+  readonly organisationLabel: string;
+  readonly projectLabel: string;
+  readonly accessProfileLabel: string;
 }
 
 interface NavigationRenderState {
@@ -51,6 +54,9 @@ function NavigationList({ onNavigate }: NavigationListProps) {
 export function AppShell({
   authenticationLabel,
   connectivityLabel,
+  organisationLabel,
+  projectLabel,
+  accessProfileLabel,
   children,
 }: AppShellProps) {
   const location = useLocation();
@@ -104,10 +110,15 @@ export function AppShell({
             </nav>
             <div className="context-card" aria-label="Workspace context">
               <span className="data-label">Organisation</span>
-              <strong>Not connected</strong>
+              <strong>{organisationLabel}</strong>
               <span className="data-label">Project</span>
-              <strong>No project selected</strong>
-              <p>Context selection remains unavailable until controlled API and access milestones pass.</p>
+              <strong>{projectLabel}</strong>
+              <span className="data-label">Access profile</span>
+              <strong>{accessProfileLabel}</strong>
+              <p>
+                Organisation and project context are not persisted in browser storage.
+                Backend authorization remains authoritative.
+              </p>
             </div>
           </aside>
 

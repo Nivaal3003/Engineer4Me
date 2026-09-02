@@ -40,5 +40,6 @@ describe("Engineer4Me frontend source-layer contract", () => {
 
   it("permits a future authentication adapter to implement the approved API token seam", () => {
     expect(isSourceDependencyAllowed("src/auth/provider.ts", "src/api/token.ts")).toBe(true);
+    expect(isSourceDependencyAllowed("src/routing/authentication-context.ts", "src/auth/session.ts")).toBe(true);
   });
 });

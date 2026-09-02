@@ -794,3 +794,124 @@ a {
 .state-experience--unavailable {
   border-color: color-mix(in srgb, var(--e4m-color-warning) 48%, var(--e4m-color-line));
 }
+
+
+.workspace-grid--access {
+  align-items: stretch;
+}
+
+.access-summary,
+.access-audit-panel {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid var(--e4m-color-line);
+  border-radius: var(--e4m-radius-panel);
+  background: var(--e4m-color-surface);
+  box-shadow: var(--e4m-shadow-panel);
+}
+
+.access-summary__heading,
+.access-audit-panel__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.access-summary__heading h2,
+.access-audit-panel__heading h2 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.25rem, 4vw, 1.65rem);
+}
+
+.access-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.access-summary__grid div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border-radius: var(--e4m-radius-control);
+  background: var(--e4m-color-surface-muted);
+}
+
+.access-summary__grid dt {
+  color: var(--e4m-color-muted);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.access-summary__grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.access-summary__boundary,
+.access-audit-panel__empty p {
+  margin: 0;
+  color: var(--e4m-color-muted);
+  line-height: 1.55;
+}
+
+.access-audit-panel__empty {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px dashed var(--e4m-color-line);
+  border-radius: var(--e4m-radius-control);
+  background: var(--e4m-color-surface-muted);
+}
+
+.access-audit-panel__list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.access-audit-panel__list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem;
+  border: 1px solid var(--e4m-color-line);
+  border-radius: var(--e4m-radius-control);
+}
+
+.access-audit-panel__list li div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.access-audit-panel__list li span:not(.status-badge) {
+  color: var(--e4m-color-muted);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 27.5rem) {
+  .access-summary__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (forced-colors: active) {
+  .access-summary,
+  .access-audit-panel,
+  .access-audit-panel__empty,
+  .access-audit-panel__list li {
+    border: 1px solid CanvasText;
+  }
+}

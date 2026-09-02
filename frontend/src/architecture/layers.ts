@@ -34,7 +34,7 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
     "authentication",
   ],
   shell: ["shell", "routing", "product_ui", "design_system", "foundation"],
-  routing: ["routing", "foundation"],
+  routing: ["routing", "foundation", "authentication"],
   state_experience: ["state_experience", "design_system", "foundation"],
   product_ui: ["product_ui", "design_system", "foundation"],
   design_system: ["design_system", "foundation"],

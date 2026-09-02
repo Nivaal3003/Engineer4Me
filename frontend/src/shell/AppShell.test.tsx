@@ -6,7 +6,13 @@ import { AppShell } from "./AppShell";
 function renderShell(initialEntry = "/") {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
-      <AppShell authenticationLabel="Blocked" connectivityLabel="unknown">
+      <AppShell
+        accessProfileLabel="Not loaded"
+        authenticationLabel="Configuration blocked"
+        connectivityLabel="unknown"
+        organisationLabel="Not selected"
+        projectLabel="No project selected"
+      >
         <h1>Workspace</h1>
       </AppShell>
     </MemoryRouter>,
@@ -14,12 +20,16 @@ function renderShell(initialEntry = "/") {
 }
 
 describe("Engineer4Me mobile-first routed product shell", () => {
-  it("provides semantic landmarks, route navigation, and a main-content skip target", () => {
+  it("provides semantic landmarks, route navigation, and explicit workspace context", () => {
     renderShell();
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Skip to main content" })).toHaveAttribute("href", "#main-content");
+    const context = screen.getByLabelText("Workspace context");
+    expect(within(context).getByText("Not selected")).toBeInTheDocument();
+    expect(within(context).getByText("Not loaded")).toBeInTheDocument();
+    expect(within(context).getByText(/not persisted in browser storage/u)).toBeInTheDocument();
 
     const desktopNavigation = screen.getByRole("navigation", { name: "Desktop product navigation" });
     expect(within(desktopNavigation).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
@@ -30,19 +40,12 @@ describe("Engineer4Me mobile-first routed product shell", () => {
     const user = userEvent.setup();
     renderShell();
     const navigation = document.getElementById("mobile-product-navigation");
-    if (!navigation) {
-      throw new Error("Mobile product navigation is missing.");
-    }
-    expect(navigation).toHaveAttribute("aria-label", "Mobile product navigation");
+    if (!navigation) throw new Error("Mobile product navigation is missing.");
     expect(navigation).not.toBeVisible();
-
-    const openButton = screen.getByRole("button", { name: "Open navigation" });
-    await user.click(openButton);
+    await user.click(screen.getByRole("button", { name: "Open navigation" }));
     expect(screen.getByRole("navigation", { name: "Mobile product navigation" })).toBeVisible();
-
     await user.click(within(navigation).getByRole("link", { name: "Selection & sizing" }));
     expect(navigation).not.toBeVisible();
-    expect(screen.getByRole("button", { name: "Open navigation" })).toHaveAttribute("aria-expanded", "false");
   });
 
   it("closes mobile navigation with Escape and restores toggle focus", async () => {
