@@ -4,6 +4,7 @@ export const SOURCE_LAYERS = [
   "application",
   "shell",
   "routing",
+  "workspace",
   "state_experience",
   "product_ui",
   "design_system",
@@ -24,6 +25,7 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
   application: [
     "shell",
     "routing",
+    "workspace",
     "state_experience",
     "product_ui",
     "design_system",
@@ -35,6 +37,17 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
   ],
   shell: ["shell", "routing", "product_ui", "design_system", "foundation"],
   routing: ["routing", "foundation", "authentication"],
+  workspace: [
+    "workspace",
+    "routing",
+    "state_experience",
+    "product_ui",
+    "design_system",
+    "foundation",
+    "contracts",
+    "api",
+    "authentication",
+  ],
   state_experience: ["state_experience", "design_system", "foundation"],
   product_ui: ["product_ui", "design_system", "foundation"],
   design_system: ["design_system", "foundation"],
@@ -52,59 +65,23 @@ function normalizeSourcePath(path: string): string {
 
 export function classifySourceModule(path: string): SourceLayer {
   const normalized = normalizeSourcePath(path);
-
   if (
     normalized.includes("/test/") ||
     normalized.includes("/__tests__/") ||
     /\.(?:test|spec)\.[cm]?[jt]sx?$/.test(normalized)
-  ) {
-    return "test";
-  }
-
-  if (normalized.endsWith("/main.tsx") || normalized === "main.tsx") {
-    return "entrypoint";
-  }
-
-  if (normalized.includes("/architecture/")) {
-    return "architecture";
-  }
-
-  if (normalized.includes("/foundation/")) {
-    return "foundation";
-  }
-
-  if (normalized.includes("/contracts/")) {
-    return "contracts";
-  }
-
-  if (normalized.includes("/api/")) {
-    return "api";
-  }
-
-  if (normalized.includes("/design-system/")) {
-    return "design_system";
-  }
-
-  if (normalized.includes("/product-ui/")) {
-    return "product_ui";
-  }
-
-  if (normalized.includes("/state-experience/")) {
-    return "state_experience";
-  }
-
-  if (normalized.includes("/routing/")) {
-    return "routing";
-  }
-
-  if (normalized.includes("/shell/")) {
-    return "shell";
-  }
-
-  if (normalized.includes("/auth/")) {
-    return "authentication";
-  }
-
+  ) return "test";
+  if (normalized.endsWith("/main.tsx") || normalized === "main.tsx") return "entrypoint";
+  if (normalized.includes("/architecture/")) return "architecture";
+  if (normalized.includes("/foundation/")) return "foundation";
+  if (normalized.includes("/contracts/")) return "contracts";
+  if (normalized.includes("/api/")) return "api";
+  if (normalized.includes("/design-system/")) return "design_system";
+  if (normalized.includes("/product-ui/")) return "product_ui";
+  if (normalized.includes("/state-experience/")) return "state_experience";
+  if (normalized.includes("/workspaces/")) return "workspace";
+  if (normalized.includes("/routing/")) return "routing";
+  if (normalized.includes("/shell/")) return "shell";
+  if (normalized.includes("/auth/")) return "authentication";
   return "application";
 }
 
@@ -116,10 +93,7 @@ export interface SourceDependencyEvaluation {
   readonly allowed: boolean;
 }
 
-export function evaluateSourceDependency(
-  fromPath: string,
-  toPath: string,
-): SourceDependencyEvaluation {
+export function evaluateSourceDependency(fromPath: string, toPath: string): SourceDependencyEvaluation {
   const fromLayer = classifySourceModule(fromPath);
   const toLayer = classifySourceModule(toPath);
   return {
@@ -131,9 +105,6 @@ export function evaluateSourceDependency(
   };
 }
 
-export function isSourceDependencyAllowed(
-  fromPath: string,
-  toPath: string,
-): boolean {
+export function isSourceDependencyAllowed(fromPath: string, toPath: string): boolean {
   return evaluateSourceDependency(fromPath, toPath).allowed;
 }

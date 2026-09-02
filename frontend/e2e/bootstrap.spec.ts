@@ -9,6 +9,9 @@ test("renders the controlled Engineer4Me browser workspace", async ({ page }) =>
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Engineering decisions, with evidence visible" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Authentication and access status" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Identity-provider activation gate" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Organisation and access profile transport" })).toBeVisible();
+  await expect(page.getByText("No accepted backend authorization-profile operation")).toBeVisible();
   await expect(page.getByText("No remote audit records loaded")).toBeVisible();
   await expect(page.getByText("No standards conformity claim")).toBeVisible();
   await expect(page.getByRole("button", { name: /sign in/iu })).toHaveCount(0);
@@ -19,7 +22,7 @@ test("navigates to a fail-closed protected capability route", async ({ page }) =
   await page.getByRole("navigation", { name: "Desktop product navigation" }).getByRole("link", { name: "Selection & sizing" }).click();
   await expect(page).toHaveURL(/\/selection$/u);
   await expect(page.getByRole("heading", { name: "Selection & sizing is not available" })).toBeVisible();
-  await expect(page.getByText(/Authentication is not active/)).toBeVisible();
+  await expect(page.getByText("Authentication execution has not been activated.")).toBeVisible();
 });
 
 test("renders the explicit not-found experience", async ({ page }) => {
