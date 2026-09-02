@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import type { AuthenticationSnapshot } from "../auth/session";
 import type { BackendAuthorizationProfileSourceReadiness } from "../auth/profile-source";
+import { CapabilityOperationPanel } from "../capability-workspace";
 import type { AppRouteDefinition, RouteAccessContext } from "../routing";
 import { createStateExperience, StateExperience } from "../state-experience";
 import { createProtectedWorkspaceModel } from "./models";
@@ -14,6 +15,9 @@ export interface ProtectedWorkspaceProps {
 }
 
 export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
+  if (props.route.id === "home") {
+    throw new Error("The public home route cannot render a protected workspace.");
+  }
   const workspace = createProtectedWorkspaceModel(props);
   const model = createStateExperience(
     workspace.state === "entitlement_denied" ? "error" : "unavailable",
@@ -26,9 +30,12 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
     },
   );
   return (
-    <StateExperience
-      action={<Link className="e4m-link-button" to="/">Return to workspace</Link>}
-      model={model}
-    />
+    <div className="protected-workspace">
+      <StateExperience
+        action={<Link className="e4m-link-button" to="/">Return to workspace</Link>}
+        model={model}
+      />
+      <CapabilityOperationPanel capabilityId={props.route.id} />
+    </div>
   );
 }

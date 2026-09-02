@@ -4,6 +4,7 @@ import {
   getProtectedCapabilityAdapterDefinition,
   type CapabilityAdapterReadinessState,
 } from "../capabilities";
+import { getCapabilityVerticalSlice } from "../capability-workspace";
 import { evaluateRouteAccess, type AppRouteDefinition, type RouteAccessContext } from "../routing";
 
 export type ProtectedWorkspaceState =
@@ -22,6 +23,12 @@ export interface ProtectedWorkspaceModel {
   readonly guidance: readonly string[];
   readonly capabilityAdapterState: CapabilityAdapterReadinessState;
   readonly allocatedOperationCount: number;
+  readonly queryOperationCount: number;
+  readonly commandOperationCount: number;
+  readonly verticalSliceAvailability:
+    | "evidence_led_in_memory_ready"
+    | "no_accepted_backend_operation";
+  readonly liveTransportActive: false;
   readonly protectedContentAvailable: false;
 }
 
@@ -36,6 +43,7 @@ export function createProtectedWorkspaceModel(input: {
     throw new Error("The public home route does not have a protected capability adapter.");
   }
   const adapter = getProtectedCapabilityAdapterDefinition(input.route.id);
+  const verticalSlice = getCapabilityVerticalSlice(input.route.id);
   const access = evaluateRouteAccess(input.route, input.accessContext);
   const adapterGuidance = adapter.state === "prepared_in_memory_contract_only"
     ? `${adapter.operationCount} accepted backend operations are allocated for in-memory contract verification only; no request has been made.`
@@ -57,6 +65,10 @@ export function createProtectedWorkspaceModel(input: {
     guidance: commonGuidance,
     capabilityAdapterState: adapter.state,
     allocatedOperationCount: adapter.operationCount,
+    queryOperationCount: adapter.queryOperationCount,
+    commandOperationCount: adapter.commandOperationCount,
+    verticalSliceAvailability: verticalSlice.availability,
+    liveTransportActive: false,
     protectedContentAvailable: false,
   });
 

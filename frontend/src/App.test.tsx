@@ -28,6 +28,9 @@ describe("Engineer4Me controlled browser product", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Selection & sizing is not available" })).toBeInTheDocument();
     expect(screen.getByText("Authentication execution has not been activated.")).toBeInTheDocument();
     expect(screen.getByText(/No engineering result, organisational record, or protected data/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Capability operation readiness" })).toBeInTheDocument();
+    expect(screen.getByText("Live transport inactive")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /execute|submit|run calculation/iu })).not.toBeInTheDocument();
   });
 
   it("renders an explicit not-found experience and returns to the workspace", async () => {

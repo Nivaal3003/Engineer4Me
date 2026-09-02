@@ -23,6 +23,9 @@ test("navigates to a fail-closed protected capability route", async ({ page }) =
   await expect(page).toHaveURL(/\/selection$/u);
   await expect(page.getByRole("heading", { name: "Selection & sizing is not available" })).toBeVisible();
   await expect(page.getByText("Authentication execution has not been activated.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Capability operation readiness" })).toBeVisible();
+  await expect(page.getByText("Live transport inactive")).toBeVisible();
+  await expect(page.getByText("Protected content not loaded")).toBeVisible();
 });
 
 test("renders the explicit not-found experience", async ({ page }) => {

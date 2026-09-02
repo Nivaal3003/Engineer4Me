@@ -7,6 +7,7 @@ describe("Engineer4Me frontend source-layer contract", () => {
     expect(classifySourceModule("src/shell/AppShell.tsx")).toBe("shell");
     expect(classifySourceModule("src/routing/routes.ts")).toBe("routing");
     expect(classifySourceModule("src/workspaces/ProtectedWorkspace.tsx")).toBe("workspace");
+    expect(classifySourceModule("src/capability-workspace/CapabilityResultView.tsx")).toBe("capability_workspace");
     expect(classifySourceModule("src/capabilities/registry.ts")).toBe("capabilities");
     expect(classifySourceModule("src/state-experience/StateExperience.tsx")).toBe("state_experience");
     expect(classifySourceModule("src/product-ui/EvidencePanel.tsx")).toBe("product_ui");
@@ -19,15 +20,16 @@ describe("Engineer4Me frontend source-layer contract", () => {
     expect(classifySourceModule("src/api/transport.test.ts")).toBe("test");
   });
 
-  it("allows application code to consume workspace, API, contract, and authentication layers", () => {
+  it("allows application code to consume controlled product layers", () => {
     expect(isSourceDependencyAllowed("src/App.tsx", "src/workspaces/index.ts")).toBe(true);
+    expect(isSourceDependencyAllowed("src/App.tsx", "src/capability-workspace/index.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/App.tsx", "src/capabilities/index.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/App.tsx", "src/api/index.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/App.tsx", "src/contracts/index.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/App.tsx", "src/auth/index.ts")).toBe(true);
   });
 
-  it("keeps API core independent of authentication, routing, and workspace implementations", () => {
+  it("keeps API core independent of authentication and workspace implementations", () => {
     expect(evaluateSourceDependency("src/api/transport.ts", "src/auth/config.ts"))
       .toMatchObject({ fromLayer: "api", toLayer: "authentication", allowed: false });
     expect(evaluateSourceDependency("src/api/transport.ts", "src/workspaces/models.ts"))
@@ -36,11 +38,23 @@ describe("Engineer4Me frontend source-layer contract", () => {
       .toMatchObject({ fromLayer: "contracts", toLayer: "api", allowed: false });
   });
 
-  it("keeps capability adapters downstream of contracts and API inventory", () => {
-    expect(isSourceDependencyAllowed("src/capabilities/registry.ts", "src/api/operation-registry.ts")).toBe(true);
-    expect(isSourceDependencyAllowed("src/capabilities/contracts.ts", "src/contracts/json.ts")).toBe(true);
-    expect(evaluateSourceDependency("src/api/transport.ts", "src/capabilities/registry.ts"))
-      .toMatchObject({ fromLayer: "api", toLayer: "capabilities", allowed: false });
+  it("keeps capability presentation downstream of strict capability contracts", () => {
+    expect(isSourceDependencyAllowed(
+      "src/capability-workspace/CapabilityResultView.tsx",
+      "src/capabilities/contracts.ts",
+    )).toBe(true);
+    expect(isSourceDependencyAllowed(
+      "src/workspaces/ProtectedWorkspace.tsx",
+      "src/capability-workspace/CapabilityOperationPanel.tsx",
+    )).toBe(true);
+    expect(evaluateSourceDependency(
+      "src/capabilities/contracts.ts",
+      "src/capability-workspace/models.ts",
+    )).toMatchObject({
+      fromLayer: "capabilities",
+      toLayer: "capability_workspace",
+      allowed: false,
+    });
   });
 
   it("permits the controlled authentication and workspace bridges", () => {

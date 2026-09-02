@@ -977,3 +977,103 @@ a {
   border-top: 1px solid var(--e4m-color-line);
   color: var(--e4m-color-muted);
 }
+
+
+.protected-workspace,
+.capability-workspace-preview {
+  display: grid;
+  gap: var(--e4m-space-5);
+}
+
+.capability-operation-panel,
+.capability-result-view {
+  display: grid;
+  gap: var(--e4m-space-4);
+}
+
+.capability-operation-panel__counts,
+.capability-result-view__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--e4m-space-3);
+}
+
+.capability-operation-panel__counts > div,
+.capability-result-view__summary > div {
+  display: grid;
+  gap: 0.25rem;
+  min-block-size: var(--e4m-target-min);
+  padding: var(--e4m-space-3);
+  border: 1px solid var(--e4m-color-line);
+  border-radius: var(--e4m-radius-md);
+  background: var(--e4m-color-surface-muted);
+}
+
+.capability-operation-panel__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e4m-space-3);
+}
+
+.capability-operation-panel__grid,
+.capability-result-view__grid {
+  display: grid;
+  gap: var(--e4m-space-4);
+}
+
+.capability-operation-panel__operation,
+.capability-result-view__evidence li {
+  display: grid;
+  gap: 0.35rem;
+  padding: var(--e4m-space-4);
+  border: 1px solid var(--e4m-color-line);
+  border-radius: var(--e4m-radius-md);
+  overflow-wrap: anywhere;
+}
+
+.capability-operation-panel__operation code {
+  font-size: 0.82rem;
+}
+
+.capability-operation-panel__boundaries,
+.capability-result-view__list ul,
+.capability-result-view__evidence ol {
+  margin: 0;
+  padding-inline-start: 1.35rem;
+}
+
+.capability-result-view__list,
+.capability-result-view__evidence,
+.capability-result-view__boundaries,
+.capability-workspace-preview__empty {
+  display: grid;
+  gap: var(--e4m-space-3);
+}
+
+.capability-result-view__evidence li span {
+  display: block;
+}
+
+.capability-result-view__boundaries {
+  padding: var(--e4m-space-4);
+  border-inline-start: 0.25rem solid var(--e4m-color-brand);
+  background: var(--e4m-color-surface-muted);
+}
+
+.capability-result-view__boundaries p {
+  margin: 0;
+}
+
+@media (min-width: 48rem) {
+  .capability-operation-panel__grid,
+  .capability-result-view__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 72rem) {
+  .capability-result-view__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

@@ -67,6 +67,10 @@ describe("protected workspace model", () => {
       state: "authentication_inactive",
       capabilityAdapterState: "prepared_in_memory_contract_only",
       allocatedOperationCount: 22,
+      queryOperationCount: 9,
+      commandOperationCount: 13,
+      verticalSliceAvailability: "evidence_led_in_memory_ready",
+      liveTransportActive: false,
       protectedContentAvailable: false,
     });
   });
@@ -84,6 +88,10 @@ describe("protected workspace model", () => {
       state: "capability_adapter_unavailable",
       capabilityAdapterState: "no_accepted_backend_operation",
       allocatedOperationCount: 0,
+      queryOperationCount: 0,
+      commandOperationCount: 0,
+      verticalSliceAvailability: "no_accepted_backend_operation",
+      liveTransportActive: false,
       protectedContentAvailable: false,
     });
   });
@@ -101,6 +109,10 @@ describe("protected workspace model", () => {
       state: "request_ready",
       capabilityAdapterState: "prepared_in_memory_contract_only",
       allocatedOperationCount: 22,
+      queryOperationCount: 9,
+      commandOperationCount: 13,
+      verticalSliceAvailability: "evidence_led_in_memory_ready",
+      liveTransportActive: false,
       protectedContentAvailable: false,
     });
   });
