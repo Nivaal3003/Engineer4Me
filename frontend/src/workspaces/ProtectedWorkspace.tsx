@@ -5,6 +5,8 @@ import { CapabilityOperationPanel } from "../capability-workspace";
 import {
   FieldInteractionPreview,
   FieldInteractionReadinessPanel,
+  PermissionCapabilityPanel,
+  PermissionGesturePolicyPanel,
 } from "../field-interaction";
 import type { AppRouteDefinition, RouteAccessContext } from "../routing";
 import { createStateExperience, StateExperience } from "../state-experience";
@@ -41,6 +43,8 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       />
       <CapabilityOperationPanel capabilityId={props.route.id} />
       <FieldInteractionReadinessPanel capabilityId={props.route.id} />
+      <PermissionCapabilityPanel />
+      <PermissionGesturePolicyPanel capabilityId={props.route.id} />
       <FieldInteractionPreview capabilityId={props.route.id} />
     </div>
   );

@@ -1219,3 +1219,81 @@ a {
     border: 1px solid CanvasText;
   }
 }
+
+
+.permission-capability-panel,
+.permission-gesture-policy {
+  display: grid;
+  gap: 1rem;
+}
+
+.permission-capability-panel__status,
+.permission-gesture-policy__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.permission-capability-panel__summary,
+.permission-gesture-policy__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.permission-capability-panel__summary > div,
+.permission-gesture-policy__summary > div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  min-height: var(--e4m-target-min);
+  padding: 0.875rem;
+  border: 1px solid var(--e4m-color-line);
+  border-radius: var(--e4m-radius-control);
+  background: var(--e4m-color-surface-muted);
+}
+
+.permission-capability-panel__summary dt,
+.permission-gesture-policy__summary dt {
+  color: var(--e4m-color-muted);
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.permission-capability-panel__summary dd,
+.permission-gesture-policy__summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.permission-capability-panel__boundaries {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding-inline-start: 1.35rem;
+}
+
+.permission-gesture-policy__boundary {
+  padding: 1rem;
+  border: 1px dashed var(--e4m-color-warning);
+  border-radius: var(--e4m-radius-control);
+  background: var(--e4m-color-warning-soft);
+}
+
+.permission-gesture-policy__boundary p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+@media (forced-colors: active) {
+  .permission-capability-panel__summary > div,
+  .permission-gesture-policy__summary > div,
+  .permission-gesture-policy__boundary {
+    border: 1px solid CanvasText;
+  }
+}

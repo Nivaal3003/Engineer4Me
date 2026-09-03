@@ -33,6 +33,8 @@ describe("fail-closed protected workspace presentation", () => {
     expect(within(counts).getByText("13")).toBeInTheDocument();
     expect(screen.getByText("Live transport inactive")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Voice and multimodal readiness" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Permission capability evidence" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "User-gesture activation policy" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Field interaction review preview" })).toBeInTheDocument();
     expect(screen.getByText("Microphone inactive")).toBeInTheDocument();
     expect(screen.getByText("Camera inactive")).toBeInTheDocument();
@@ -56,10 +58,16 @@ describe("fail-closed protected workspace presentation", () => {
       </MemoryRouter>,
     );
     expect(screen.getByRole("heading", { name: "Troubleshooting is not available" })).toBeInTheDocument();
-    expect(screen.getByText("Unavailable")).toBeInTheDocument();
-    expect(screen.getAllByText("No accepted operation")).toHaveLength(2);
-    expect(screen.getByText("Protected content not loaded")).toBeInTheDocument();
+    const operationReadiness = screen.getByRole("region", {
+      name: "Capability operation readiness",
+    });
+    expect(within(operationReadiness).getByText("Unavailable")).toBeInTheDocument();
+    expect(within(operationReadiness).getAllByText("No accepted operation")).toHaveLength(2);
+    expect(within(operationReadiness).getByText("Protected content not loaded")).toBeInTheDocument();
     expect(screen.getByText(/No browser permission API/)).toBeInTheDocument();
+    expect(screen.getByText("Read-only detection")).toBeInTheDocument();
+    expect(screen.getByText("Intervention gate closed")).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.getByText(/No backend request, bearer-token attachment/)).toBeInTheDocument();
   });
 });
