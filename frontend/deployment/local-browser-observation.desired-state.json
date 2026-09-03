@@ -1,0 +1,19 @@
+{
+  "allowed_loopback_host": "127.0.0.1",
+  "allowed_request_path": "/phase10-readiness",
+  "browser_executed_by_batch": false,
+  "browser_launch_authorized_by_batch": false,
+  "cache_control_value": "no-store",
+  "content_type_value": "text/html; charset=utf-8",
+  "exact_permissions_policy_value": "microphone=(), camera=()",
+  "expected_status_code": 200,
+  "external_network_allowed": false,
+  "headless_required": true,
+  "isolated_user_data_directory_required": true,
+  "loopback_response_header_observation_authorized": true,
+  "permission_prompt_authorized": false,
+  "production_deployment_authorized": false,
+  "record_type": "controlled_local_browser_execution_readiness_only",
+  "schema_version": 1,
+  "service_worker_allowed": false
+}

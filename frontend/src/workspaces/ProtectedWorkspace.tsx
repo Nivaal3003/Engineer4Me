@@ -4,6 +4,7 @@ import type { BackendAuthorizationProfileSourceReadiness } from "../auth/profile
 import { CapabilityOperationPanel } from "../capability-workspace";
 import {
   FieldInteractionPreview,
+  LocalBrowserExecutionReadinessPanel,
   FieldInteractionReadinessPanel,
   PermissionCapabilityPanel,
   PermissionGesturePolicyPanel,
@@ -47,6 +48,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       <PermissionCapabilityPanel />
       <PermissionGesturePolicyPanel capabilityId={props.route.id} />
       <SupportedBrowserReadinessPanel />
+      <LocalBrowserExecutionReadinessPanel />
       <FieldInteractionPreview capabilityId={props.route.id} />
     </div>
   );

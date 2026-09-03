@@ -36,6 +36,7 @@ describe("fail-closed protected workspace presentation", () => {
     expect(screen.getByRole("heading", { name: "Permission capability evidence" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "User-gesture activation policy" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Supported-browser readiness evidence" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Local browser execution readiness" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Field interaction review preview" })).toBeInTheDocument();
     expect(screen.getByText("Microphone inactive")).toBeInTheDocument();
     expect(screen.getByText("Camera inactive")).toBeInTheDocument();
@@ -69,6 +70,8 @@ describe("fail-closed protected workspace presentation", () => {
     expect(screen.getByText("Read-only detection")).toBeInTheDocument();
     expect(screen.getByText("Intervention gate closed")).toBeInTheDocument();
     expect(screen.getByText("Deployment header unverified")).toBeInTheDocument();
+    expect(screen.getByText("Loopback observation evidence")).toBeInTheDocument();
+    expect(screen.getByText("Browser launch closed")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.getByText(/No backend request, bearer-token attachment/)).toBeInTheDocument();
   });

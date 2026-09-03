@@ -1,0 +1,190 @@
+{
+  "batch": {
+    "first_step": 415,
+    "internal_gate_count": 12,
+    "last_step": 426
+  },
+  "boundaries": {
+    "automatic_best_brand_selection": false,
+    "automatic_retry_enabled": false,
+    "backend_transport_activated": false,
+    "bearer_token_attached": false,
+    "browser_executable_evidence_accepted": false,
+    "browser_executable_inventory_performed": false,
+    "browser_executed": false,
+    "browser_execution_readiness_policy_implemented": true,
+    "browser_identity_collection_prohibited": true,
+    "browser_launch_authorized": false,
+    "browser_launch_operation_available": false,
+    "browser_name_collected": false,
+    "browser_permission_api_called": false,
+    "browser_support_determination_capability_based": true,
+    "browser_version_collected": false,
+    "camera_permission_requested": false,
+    "capability_detection_read_only": true,
+    "controlled_loopback_header_observation_authorized": true,
+    "controlled_loopback_header_observer_implemented": true,
+    "default_deny_header_desired_state_bound": true,
+    "deployment_header_applied": false,
+    "deployment_header_parser_fail_closed": true,
+    "deployment_permissions_policy_header_contract_implemented": true,
+    "device_identifiers_loaded": false,
+    "document_bytes_loaded": false,
+    "exact_default_deny_loopback_header_required": true,
+    "explicit_review_state_machine_implemented": true,
+    "explicit_user_gesture_policy_implemented": true,
+    "external_ai_service_called": false,
+    "external_network_request_performed": false,
+    "external_speech_service_called": false,
+    "external_vision_or_ocr_service_called": false,
+    "field_interaction_source_contracts_implemented": true,
+    "final_engineering_approval_user_owned": true,
+    "future_self_only_header_candidate_recorded": true,
+    "identity_provider_interaction_performed": false,
+    "inert_browser_readiness_adapter_implemented": true,
+    "inert_local_browser_execution_adapter_implemented": true,
+    "inert_permission_adapter_implemented": true,
+    "live_audio_captured": false,
+    "live_authentication_performed": false,
+    "live_deployment_response_header_read": false,
+    "live_image_captured": false,
+    "live_response_header_read": false,
+    "local_ai_model_executed": false,
+    "local_browser_executable_evidence_contract_implemented": true,
+    "local_browser_execution_intervention_gate_retained": true,
+    "local_loopback_server_exposed_externally": false,
+    "loopback_only_network_boundary_implemented": true,
+    "media_device_enumeration_performed": false,
+    "metadata_only_multimodal_descriptors_implemented": true,
+    "microphone_permission_requested": false,
+    "native_mobile_packaging_performed": false,
+    "navigation_operation_available": false,
+    "no_device_enumeration_boundary_implemented": true,
+    "operational_authorization_user_owned": true,
+    "permission_activation_authorized": false,
+    "permission_activation_proposal_implemented": true,
+    "permission_capability_detection_implemented": true,
+    "permission_outcome_state_model_implemented": true,
+    "permission_override_operation_available": false,
+    "permission_policy_evidence_contract_implemented": true,
+    "permission_prompt_shown": false,
+    "permission_request_prepared": false,
+    "permission_status_queried": false,
+    "permissions_policy_method_called": false,
+    "phase10_source_scope_started": true,
+    "privacy_and_provenance_contracts_implemented": true,
+    "production_deployment_authorized": false,
+    "production_deployment_performed": false,
+    "proprietary_and_trademark_identification_required": true,
+    "protected_content_accessed": false,
+    "protected_workspace_local_browser_readiness_integrated": true,
+    "protected_workspace_permission_readiness_presentation_integrated": true,
+    "protected_workspace_supported_browser_readiness_integrated": true,
+    "pwa_caching_enabled": false,
+    "query_or_command_executed": false,
+    "raw_media_persisted": false,
+    "repository_header_desired_state_only": true,
+    "reviewed_header_evidence_contract_implemented": true,
+    "scripted_in_memory_voice_preview_implemented": true,
+    "secure_context_prerequisite_evidence_implemented": true,
+    "service_worker_enabled": false,
+    "single_use_gesture_policy_implemented": true,
+    "standards_conformity_claimed": false,
+    "supported_browser_readiness_evidence_implemented": true,
+    "top_level_context_prerequisite_evidence_implemented": true,
+    "trusted_user_gesture_recorded": false,
+    "user_agent_client_hints_read": false,
+    "user_agent_read": false,
+    "vendor_neutrality_required": true
+  },
+  "controls": {
+    "accepted_parent_archive_required": true,
+    "browser_execution_authorized": false,
+    "controlled_loopback_response_header_observation_authorized": true,
+    "external_network_authorized": false,
+    "identity_or_credentials_authorized": false,
+    "loopback_listener_host": "127.0.0.1",
+    "permission_query_or_prompt_authorized": false,
+    "production_deployment_authorized": false
+  },
+  "parent": {
+    "branch": "feature/phase-10",
+    "commit": "02a01ea400871a9297444879f63153930b56f958",
+    "parent": "7c2171b160dea0ce8351d8aa169ec0a43059f100",
+    "subject": "Add Phase 10 supported-browser and deployment header evidence",
+    "tree": "b72bbba49991bb0b7f02abaefe9a0d9d1cb172bb"
+  },
+  "phase": 10,
+  "phase_title": "Voice, multimodal field interaction, and controlled activation execution",
+  "planned_commit": {
+    "branch": "feature/phase-10",
+    "subject": "Add Phase 10 loopback header and browser execution readiness evidence"
+  },
+  "record_id": "6fc22c85fcde3d4ef18ae0bddd5af2f37a2786d1ea50569ca86dfe9a1abd7c46",
+  "record_type": "phase10_bounded_development_batch_control",
+  "schema_version": 1,
+  "status": "controlled_execution_required_for_acceptance",
+  "steps": {
+    "415": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP415-ACCEPTED-BATCH403-414-ACCEPTANCE-BINDING-AND-LOCAL-BROWSER-READINESS-INCEPTION.json",
+      "record_id": "42f558d7048648706f720c9d7b39625b4304e44aaeefc80960aa89235fcc9f5b",
+      "title": "Accepted Batch 403-414 acceptance binding and local-browser readiness inception"
+    },
+    "416": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP416-LOOPBACK-ONLY-ORIGIN-REQUEST-METHOD-AND-PATH-BOUNDARY.json",
+      "record_id": "bc532ff0e3b3649b537d4e1fcd5a28d4b787cb9d3fd6100e5642c32db05d4860",
+      "title": "Loopback-only origin, request-method, and path boundary"
+    },
+    "417": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP417-EXACT-DEFAULT-DENY-STATIC-RESPONSE-FIXTURE-CONTRACT.json",
+      "record_id": "c2dc5f8351d1fb8daa95fd8f1bc1159dbffbea25b374d7eeb3dcf173806fde82",
+      "title": "Exact default-deny static response-fixture contract"
+    },
+    "418": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP418-CONTROLLED-LOOPBACK-PERMISSIONS-POLICY-RESPONSE-HEADER-OBSERVATION.json",
+      "record_id": "689e99c404c3c0b4ae7869f722c2e47424871b1703c0d0853e88ede299fd52dd",
+      "title": "Controlled loopback Permissions-Policy response-header observation"
+    },
+    "419": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP419-REDIRECT-COOKIE-AUTHENTICATION-CORS-AND-DUPLICATE-HEADER-DENIAL.json",
+      "record_id": "a99fc53866ea8bf233c0cf03f49ddcdb5b7e6986c892f099caa6632d6d5d0245",
+      "title": "Redirect, cookie, authentication, CORS, and duplicate-header denial"
+    },
+    "420": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP420-ISOLATED-HEADLESS-EPHEMERAL-BROWSER-EXECUTION-POLICY.json",
+      "record_id": "12d3173e804e7e890cb2a60ec7dd622bdad4499afda58d67940a945177a9c06d",
+      "title": "Isolated headless ephemeral browser-execution policy"
+    },
+    "421": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP421-EXTERNAL-NETWORK-CREDENTIAL-STORAGE-SERVICE-WORKER-AND-PERMISSION-OVERRIDE-DENIAL.json",
+      "record_id": "6ec2efc8c4811b292847f00f4039dc7b849ddf11257b48731af716490cc0f13a",
+      "title": "External-network, credential, storage, service-worker, and permission-override denial"
+    },
+    "422": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP422-LOCAL-BROWSER-EXECUTABLE-EVIDENCE-WITHOUT-BROWSER-IDENTITY-COLLECTION.json",
+      "record_id": "db0f2195b95413355e7e6cb7fcfe6cb11a498e97c472bdbf390a911d0724a170",
+      "title": "Local-browser executable evidence without browser-identity collection"
+    },
+    "423": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP423-FAIL-CLOSED-LOCAL-BROWSER-EXECUTION-READINESS-EVALUATOR.json",
+      "record_id": "2b61d9a9c741289c91613622a18e41de999611034e768cb3662f5640d29c3bb8",
+      "title": "Fail-closed local-browser execution-readiness evaluator"
+    },
+    "424": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP424-INERT-LOCAL-BROWSER-EXECUTION-ADAPTER-WITHOUT-LAUNCH-OR-NAVIGATION.json",
+      "record_id": "80b7655a8ab1037690148d40ca28d4fd5a06e83dcb4540218219a9a27b05990f",
+      "title": "Inert local-browser execution adapter without launch or navigation"
+    },
+    "425": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP425-ACCESSIBLE-READINESS-PRESENTATION-AND-PROTECTED-WORKSPACE-ARCHITECTURE-ENFORCEMENT.json",
+      "record_id": "40b3efaa39ceb786b2de1d5dff96ee44e8bfacf36c8d50904c25ec13aa54130c",
+      "title": "Accessible readiness presentation and protected-workspace architecture enforcement"
+    },
+    "426": {
+      "path": "docs/10_Voice_Multimodal_Field_Interaction/PHASE10-STEP426-DETERMINISTIC-VERIFICATION-LOOPBACK-PROOF-BRANCH-PUBLICATION-AND-BATCH-ACCEPTANCE.json",
+      "record_id": "1083d63aa764b1e0ba836b74044a5c46457886617ad6e128fc4a321338372a4a",
+      "title": "Deterministic verification, loopback proof, branch publication, and batch acceptance"
+    }
+  },
+  "title": "Controlled loopback response-header observation and local browser-execution readiness"
+}
