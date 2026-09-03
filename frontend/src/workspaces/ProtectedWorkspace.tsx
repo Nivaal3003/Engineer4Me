@@ -2,6 +2,10 @@ import { Link } from "react-router";
 import type { AuthenticationSnapshot } from "../auth/session";
 import type { BackendAuthorizationProfileSourceReadiness } from "../auth/profile-source";
 import { CapabilityOperationPanel } from "../capability-workspace";
+import {
+  FieldInteractionPreview,
+  FieldInteractionReadinessPanel,
+} from "../field-interaction";
 import type { AppRouteDefinition, RouteAccessContext } from "../routing";
 import { createStateExperience, StateExperience } from "../state-experience";
 import { createProtectedWorkspaceModel } from "./models";
@@ -36,6 +40,8 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
         model={model}
       />
       <CapabilityOperationPanel capabilityId={props.route.id} />
+      <FieldInteractionReadinessPanel capabilityId={props.route.id} />
+      <FieldInteractionPreview capabilityId={props.route.id} />
     </div>
   );
 }

@@ -32,6 +32,11 @@ describe("fail-closed protected workspace presentation", () => {
     expect(within(counts).getByText("9")).toBeInTheDocument();
     expect(within(counts).getByText("13")).toBeInTheDocument();
     expect(screen.getByText("Live transport inactive")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Voice and multimodal readiness" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Field interaction review preview" })).toBeInTheDocument();
+    expect(screen.getByText("Microphone inactive")).toBeInTheDocument();
+    expect(screen.getByText("Camera inactive")).toBeInTheDocument();
+    expect(screen.getByText("No operation selected")).toBeInTheDocument();
   });
 
   it("keeps a route with no accepted operation explicitly unavailable", () => {
@@ -54,5 +59,7 @@ describe("fail-closed protected workspace presentation", () => {
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
     expect(screen.getAllByText("No accepted operation")).toHaveLength(2);
     expect(screen.getByText("Protected content not loaded")).toBeInTheDocument();
+    expect(screen.getByText(/No browser permission API/)).toBeInTheDocument();
+    expect(screen.getByText(/No backend request, bearer-token attachment/)).toBeInTheDocument();
   });
 });

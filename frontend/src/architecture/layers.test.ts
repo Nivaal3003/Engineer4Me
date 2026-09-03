@@ -8,6 +8,7 @@ describe("Engineer4Me frontend source-layer contract", () => {
     expect(classifySourceModule("src/routing/routes.ts")).toBe("routing");
     expect(classifySourceModule("src/workspaces/ProtectedWorkspace.tsx")).toBe("workspace");
     expect(classifySourceModule("src/capability-workspace/CapabilityResultView.tsx")).toBe("capability_workspace");
+    expect(classifySourceModule("src/field-interaction/models.ts")).toBe("field_interaction");
     expect(classifySourceModule("src/capabilities/registry.ts")).toBe("capabilities");
     expect(classifySourceModule("src/state-experience/StateExperience.tsx")).toBe("state_experience");
     expect(classifySourceModule("src/product-ui/EvidencePanel.tsx")).toBe("product_ui");
@@ -23,6 +24,7 @@ describe("Engineer4Me frontend source-layer contract", () => {
   it("allows application code to consume controlled product layers", () => {
     expect(isSourceDependencyAllowed("src/App.tsx", "src/workspaces/index.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/App.tsx", "src/capability-workspace/index.ts")).toBe(true);
+    expect(isSourceDependencyAllowed("src/App.tsx", "src/field-interaction/index.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/App.tsx", "src/capabilities/index.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/App.tsx", "src/api/index.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/App.tsx", "src/contracts/index.ts")).toBe(true);
@@ -61,6 +63,12 @@ describe("Engineer4Me frontend source-layer contract", () => {
     expect(isSourceDependencyAllowed("src/auth/msal-provider.ts", "src/api/token.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/workspaces/ProtectedWorkspace.tsx", "src/auth/session.ts")).toBe(true);
     expect(isSourceDependencyAllowed("src/workspaces/ProtectedWorkspace.tsx", "src/routing/access.ts")).toBe(true);
+    expect(isSourceDependencyAllowed("src/workspaces/ProtectedWorkspace.tsx", "src/field-interaction/index.ts")).toBe(true);
+    expect(isSourceDependencyAllowed("src/field-interaction/FieldInteractionPreview.tsx", "src/capabilities/index.ts")).toBe(true);
+    expect(evaluateSourceDependency("src/field-interaction/models.ts", "src/api/transport.ts"))
+      .toMatchObject({ fromLayer: "field_interaction", toLayer: "api", allowed: false });
+    expect(evaluateSourceDependency("src/field-interaction/models.ts", "src/auth/session.ts"))
+      .toMatchObject({ fromLayer: "field_interaction", toLayer: "authentication", allowed: false });
     expect(isSourceDependencyAllowed("src/workspaces/models.ts", "src/capabilities/registry.ts")).toBe(true);
   });
 });

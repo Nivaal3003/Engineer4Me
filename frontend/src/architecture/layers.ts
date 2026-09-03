@@ -6,6 +6,7 @@ export const SOURCE_LAYERS = [
   "routing",
   "workspace",
   "capability_workspace",
+  "field_interaction",
   "capabilities",
   "state_experience",
   "product_ui",
@@ -29,6 +30,7 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
     "routing",
     "workspace",
     "capability_workspace",
+    "field_interaction",
     "capabilities",
     "state_experience",
     "product_ui",
@@ -44,6 +46,7 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
   workspace: [
     "workspace",
     "capability_workspace",
+    "field_interaction",
     "capabilities",
     "routing",
     "state_experience",
@@ -56,6 +59,14 @@ export const SOURCE_LAYER_DEPENDENCIES: Readonly<
   ],
   capability_workspace: [
     "capability_workspace",
+    "capabilities",
+    "product_ui",
+    "design_system",
+    "foundation",
+    "contracts",
+  ],
+  field_interaction: [
+    "field_interaction",
     "capabilities",
     "product_ui",
     "design_system",
@@ -94,6 +105,7 @@ export function classifySourceModule(path: string): SourceLayer {
   if (normalized.includes("/product-ui/")) return "product_ui";
   if (normalized.includes("/state-experience/")) return "state_experience";
   if (normalized.includes("/capability-workspace/")) return "capability_workspace";
+  if (normalized.includes("/field-interaction/")) return "field_interaction";
   if (normalized.includes("/capabilities/")) return "capabilities";
   if (normalized.includes("/workspaces/")) return "workspace";
   if (normalized.includes("/routing/")) return "routing";
