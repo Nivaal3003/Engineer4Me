@@ -7,6 +7,7 @@ import {
   FieldInteractionReadinessPanel,
   PermissionCapabilityPanel,
   PermissionGesturePolicyPanel,
+  SupportedBrowserReadinessPanel,
 } from "../field-interaction";
 import type { AppRouteDefinition, RouteAccessContext } from "../routing";
 import { createStateExperience, StateExperience } from "../state-experience";
@@ -45,6 +46,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       <FieldInteractionReadinessPanel capabilityId={props.route.id} />
       <PermissionCapabilityPanel />
       <PermissionGesturePolicyPanel capabilityId={props.route.id} />
+      <SupportedBrowserReadinessPanel />
       <FieldInteractionPreview capabilityId={props.route.id} />
     </div>
   );

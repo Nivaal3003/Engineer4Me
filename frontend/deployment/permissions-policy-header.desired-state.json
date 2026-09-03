@@ -1,0 +1,11 @@
+{
+  "active_repository_profile": "default_deny",
+  "default_deny_value": "microphone=(), camera=()",
+  "deployment_applied_by_batch": false,
+  "future_controlled_self_candidate_value": "microphone=(self), camera=(self)",
+  "header_name": "Permissions-Policy",
+  "permission_prompt_authorized": false,
+  "production_deployment_authorized": false,
+  "record_type": "repository_desired_state_only",
+  "schema_version": 1
+}

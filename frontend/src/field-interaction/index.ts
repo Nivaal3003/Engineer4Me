@@ -15,3 +15,8 @@ export * from "./permission-capabilities";
 export * from "./permission-lifecycle";
 export * from "./permission-policy";
 export * from "./user-gesture";
+export * from "./SupportedBrowserReadinessPanel";
+export * from "./deployment-header-evidence";
+export * from "./deployment-permissions-policy";
+export * from "./inert-browser-readiness-adapter";
+export * from "./supported-browser-readiness";
