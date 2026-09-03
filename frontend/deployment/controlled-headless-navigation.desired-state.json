@@ -1,0 +1,23 @@
+{
+  "allowed_loopback_host": "127.0.0.1",
+  "allowed_request_method": "GET",
+  "allowed_request_path": "/phase10-readiness",
+  "application_browser_launch_operation_available": false,
+  "browser_executable_download_or_install_allowed": false,
+  "browser_executable_path_persisted": false,
+  "browser_identity_collection_allowed": false,
+  "controlled_verifier_browser_launch_authorized": true,
+  "exact_permissions_policy_value": "microphone=(), camera=()",
+  "external_network_allowed": false,
+  "fresh_ephemeral_profile_required": true,
+  "headless_required": true,
+  "maximum_main_document_request_count": 1,
+  "maximum_navigation_count": 1,
+  "permission_prompt_authorized": false,
+  "production_deployment_authorized": false,
+  "profile_deletion_required": true,
+  "record_type": "controlled_headless_loopback_browser_navigation_desired_state_only",
+  "reviewed_signed_executable_required": true,
+  "schema_version": 1,
+  "service_worker_allowed": false
+}

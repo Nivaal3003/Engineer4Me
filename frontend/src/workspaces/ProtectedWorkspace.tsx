@@ -3,6 +3,7 @@ import type { AuthenticationSnapshot } from "../auth/session";
 import type { BackendAuthorizationProfileSourceReadiness } from "../auth/profile-source";
 import { CapabilityOperationPanel } from "../capability-workspace";
 import {
+  ControlledBrowserNavigationEvidencePanel,
   FieldInteractionPreview,
   LocalBrowserExecutionReadinessPanel,
   FieldInteractionReadinessPanel,
@@ -49,6 +50,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       <PermissionGesturePolicyPanel capabilityId={props.route.id} />
       <SupportedBrowserReadinessPanel />
       <LocalBrowserExecutionReadinessPanel />
+      <ControlledBrowserNavigationEvidencePanel />
       <FieldInteractionPreview capabilityId={props.route.id} />
     </div>
   );
