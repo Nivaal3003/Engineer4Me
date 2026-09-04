@@ -45,3 +45,10 @@ export * from "./permission-consent-policy";
 export * from "./permission-outcome-evidence";
 export * from "./permission-prompt-execution-plan";
 export * from "./permission-prompt-proposal";
+
+export * from "./ControlledMicrophonePermissionEvidencePanel";
+export * from "./controlled-microphone-permission-outcome";
+export * from "./controlled-microphone-permission-policy";
+export * from "./controlled-microphone-permission-receipt";
+export * from "./immediate-track-termination-evidence";
+export * from "./inert-controlled-microphone-permission-adapter";

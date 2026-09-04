@@ -5,6 +5,7 @@ import { CapabilityOperationPanel } from "../capability-workspace";
 import {
   ControlledBrowserCapabilityObservationPanel,
   ControlledBrowserNavigationEvidencePanel,
+  ControlledMicrophonePermissionEvidencePanel,
   FieldInteractionPreview,
   LocalBrowserExecutionReadinessPanel,
   MicrophonePermissionActivationProposalPanel,
@@ -55,6 +56,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       <ControlledBrowserNavigationEvidencePanel />
       <ControlledBrowserCapabilityObservationPanel />
       <MicrophonePermissionActivationProposalPanel />
+      <ControlledMicrophonePermissionEvidencePanel />
       <FieldInteractionPreview capabilityId={props.route.id} />
     </div>
   );
