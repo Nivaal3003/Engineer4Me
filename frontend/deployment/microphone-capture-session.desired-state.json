@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "profile": "phase10_bounded_no_persistence_microphone_source_session_proposal",
+  "status": "proposal_only_intervention_required",
+  "scope": {
+    "microphone": true,
+    "camera": false,
+    "exact_get_user_media_call_maximum": 1,
+    "maximum_source_session_milliseconds": 3000,
+    "user_early_stop_required": true,
+    "automatic_stop_at_ceiling_required": true,
+    "every_returned_track_stop_required": true
+  },
+  "audio_use": {
+    "audio_element_attachment": false,
+    "audio_context": false,
+    "media_recorder": false,
+    "audio_worklet": false,
+    "sample_read": false,
+    "analysis": false,
+    "recording": false,
+    "raw_media_persistence": false,
+    "media_transmission": false
+  },
+  "activation": {
+    "fresh_capture_specific_consent_required": true,
+    "trusted_single_use_start_gesture_required": true,
+    "capture_execution_authorized": false,
+    "application_operation_available": false,
+    "separate_intervention_gate_required": true,
+    "automatic_retry": false
+  },
+  "downstream": {
+    "permission_status_query": false,
+    "device_enumeration": false,
+    "device_identifier_read": false,
+    "backend_transport": false,
+    "protected_content_access": false,
+    "external_ai": false,
+    "service_worker": false,
+    "persistent_cache": false,
+    "native_packaging": false,
+    "production_deployment": false
+  }
+}
