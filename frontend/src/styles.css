@@ -1503,3 +1503,60 @@ a {
     border: 1px solid CanvasText;
   }
 }
+
+
+.controlled-browser-capability-observation {
+  display: grid;
+  gap: 1rem;
+}
+
+.controlled-browser-capability-observation__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.controlled-browser-capability-observation__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.controlled-browser-capability-observation__summary > div {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.875rem;
+  border: 1px solid var(--e4m-color-line);
+  border-radius: var(--e4m-radius-control);
+  background: var(--e4m-color-surface-muted);
+}
+
+.controlled-browser-capability-observation__summary dt {
+  color: var(--e4m-color-muted);
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.controlled-browser-capability-observation__summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.controlled-browser-capability-observation__boundaries {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding-inline-start: 1.35rem;
+}
+
+@media (forced-colors: active) {
+  .controlled-browser-capability-observation__summary > div {
+    border: 1px solid CanvasText;
+  }
+}
