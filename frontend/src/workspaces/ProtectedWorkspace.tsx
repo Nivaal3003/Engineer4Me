@@ -7,6 +7,7 @@ import {
   ControlledBrowserNavigationEvidencePanel,
   FieldInteractionPreview,
   LocalBrowserExecutionReadinessPanel,
+  MicrophonePermissionActivationProposalPanel,
   FieldInteractionReadinessPanel,
   PermissionCapabilityPanel,
   PermissionGesturePolicyPanel,
@@ -53,6 +54,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       <LocalBrowserExecutionReadinessPanel />
       <ControlledBrowserNavigationEvidencePanel />
       <ControlledBrowserCapabilityObservationPanel />
+      <MicrophonePermissionActivationProposalPanel />
       <FieldInteractionPreview capabilityId={props.route.id} />
     </div>
   );

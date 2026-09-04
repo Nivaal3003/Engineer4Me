@@ -1,0 +1,16 @@
+{
+  "activation_profile": "proposal_and_intervention_plan_only",
+  "automatic_retry_authorized": false,
+  "camera_permission_included": false,
+  "capture_authorized": false,
+  "consent_disclosure_sha256": "b25091c17ab28b028c51e1a9f532febec810a1f2cfc95cad15688b9962d8e4bc",
+  "consent_disclosure_version": "phase10-microphone-permission-consent-v1",
+  "device_enumeration_authorized": false,
+  "exact_future_prompt_count_maximum": 1,
+  "microphone_permission_prompt_authorized_by_batch": false,
+  "permission_status_query_authorized": false,
+  "production_deployment_authorized": false,
+  "record_type": "repository_desired_state_only",
+  "schema_version": 1,
+  "separate_user_run_gate_required": true
+}
