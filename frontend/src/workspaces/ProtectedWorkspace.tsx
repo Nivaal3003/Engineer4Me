@@ -21,6 +21,7 @@ import type { AppRouteDefinition, RouteAccessContext } from "../routing";
 import { createStateExperience, StateExperience } from "../state-experience";
 import { createProtectedWorkspaceModel } from "./models";
 
+import { ControlledAudioSignalPresenceEvidencePanel } from "../field-interaction/ControlledAudioSignalPresenceEvidencePanel";
 export interface ProtectedWorkspaceProps {
   readonly route: AppRouteDefinition;
   readonly accessContext: RouteAccessContext;
@@ -64,6 +65,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       <ControlledMicrophoneSourceSessionEvidencePanel />
       <ControlledAudioSampleAcquisitionProposalPanel />
       <FieldInteractionPreview capabilityId={props.route.id} />
+          <ControlledAudioSignalPresenceEvidencePanel />
     </div>
   );
 }
