@@ -3,6 +3,7 @@ import type { AuthenticationSnapshot } from "../auth/session";
 import type { BackendAuthorizationProfileSourceReadiness } from "../auth/profile-source";
 import { CapabilityOperationPanel } from "../capability-workspace";
 import {
+  ControlledAudioSampleAcquisitionProposalPanel,
   ControlledBrowserCapabilityObservationPanel,
   ControlledBrowserNavigationEvidencePanel,
   ControlledMicrophoneCaptureProposalPanel,
@@ -61,6 +62,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       <ControlledMicrophonePermissionEvidencePanel />
       <ControlledMicrophoneCaptureProposalPanel />
       <ControlledMicrophoneSourceSessionEvidencePanel />
+      <ControlledAudioSampleAcquisitionProposalPanel />
       <FieldInteractionPreview capabilityId={props.route.id} />
     </div>
   );

@@ -65,3 +65,10 @@ export * from "./controlled-microphone-source-session-outcome";
 export * from "./controlled-microphone-source-session-policy";
 export * from "./controlled-microphone-source-session-receipt";
 export * from "./inert-controlled-microphone-source-session-adapter";
+
+export * from "./ControlledAudioSampleAcquisitionProposalPanel";
+export * from "./accepted-microphone-source-session-import";
+export * from "./audio-sample-access-consent";
+export * from "./audio-sample-acquisition-policy";
+export * from "./audio-signal-presence-proposal";
+export * from "./inert-audio-sample-acquisition-adapter";
