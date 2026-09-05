@@ -58,3 +58,10 @@ export * from "./inert-microphone-capture-adapter";
 export * from "./microphone-capture-consent";
 export * from "./microphone-capture-policy";
 export * from "./microphone-capture-proposal";
+
+export * from "./ControlledMicrophoneSourceSessionEvidencePanel";
+export * from "./accepted-microphone-capture-proposal-import";
+export * from "./controlled-microphone-source-session-outcome";
+export * from "./controlled-microphone-source-session-policy";
+export * from "./controlled-microphone-source-session-receipt";
+export * from "./inert-controlled-microphone-source-session-adapter";

@@ -42,6 +42,7 @@ describe("fail-closed protected workspace presentation", () => {
     expect(screen.getByRole("heading", { name: "Microphone permission activation proposal" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Controlled microphone permission request evidence" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Bounded microphone source-session proposal" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Controlled microphone source-session evidence" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Field interaction review preview" })).toBeInTheDocument();
     expect(screen.getByText("Microphone inactive")).toBeInTheDocument();
     expect(screen.getByText("Camera inactive")).toBeInTheDocument();
@@ -88,6 +89,9 @@ describe("fail-closed protected workspace presentation", () => {
     expect(screen.getByText("Permission outcome imported")).toBeInTheDocument();
     expect(screen.getByText("Capture consent not recorded")).toBeInTheDocument();
     expect(screen.getByText("Execution gate closed")).toBeInTheDocument();
+    expect(screen.getByText("Three-second source ceiling")).toBeInTheDocument();
+    expect(screen.getByText("Audio samples remain inaccessible")).toBeInTheDocument();
+    expect(screen.getByText("Application source-session control unavailable")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.getByText(/No backend request, bearer-token attachment/)).toBeInTheDocument();
   });
