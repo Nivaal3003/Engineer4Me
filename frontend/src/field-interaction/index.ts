@@ -84,3 +84,10 @@ export * from "./transcript-revision-review";
 export * from "./transcript-processing-readiness";
 export * from "./inert-transcript-processing-adapter";
 export * from "./TranscriptReviewBoundaryPanel";
+
+export * from "./scripted-processing-policy";
+export * from "./scripted-transcript-fixture";
+export * from "./scripted-processing-controller";
+export * from "./scripted-result-review";
+export * from "./inert-scripted-processing-status";
+export * from "./ScriptedProcessingBoundaryPanel";

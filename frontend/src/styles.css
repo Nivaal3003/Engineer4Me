@@ -1912,3 +1912,10 @@ a {
 .transcript-review-boundary dt { font-weight: 600; }
 .transcript-review-boundary dd { margin: 0; }
 @media (max-width: 40rem) { .transcript-review-boundary dl { grid-template-columns: 1fr; } .transcript-review-boundary dd { margin-bottom: .75rem; } }
+
+/* Source-only scripted lifecycle information; no activation controls. */
+.scripted-processing-boundary { border-block-start: 1px solid currentColor; margin-block-start: 1rem; padding-block-start: 1rem; }
+.scripted-processing-boundary dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 0.5rem 1rem; }
+.scripted-processing-boundary dt { font-weight: 600; }
+.scripted-processing-boundary dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 40rem) { .scripted-processing-boundary dl { grid-template-columns: minmax(0, 1fr); } }

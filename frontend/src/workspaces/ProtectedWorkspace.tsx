@@ -4,6 +4,7 @@ import type { BackendAuthorizationProfileSourceReadiness } from "../auth/profile
 import { CapabilityOperationPanel } from "../capability-workspace";
 import {
   TranscriptReviewBoundaryPanel,
+  ScriptedProcessingBoundaryPanel,
   ControlledAudioSampleAcquisitionProposalPanel,
   ControlledBrowserCapabilityObservationPanel,
   ControlledBrowserNavigationEvidencePanel,
@@ -68,6 +69,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       <FieldInteractionPreview capabilityId={props.route.id} />
           <ControlledAudioSignalPresenceEvidencePanel />
       <TranscriptReviewBoundaryPanel />
+      <ScriptedProcessingBoundaryPanel />
     </div>
   );
 }
