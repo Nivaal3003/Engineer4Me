@@ -1905,3 +1905,10 @@ a {
 .controlled-signal-presence-evidence dd {
   margin: 0;
 }
+
+/* Source-only transcript evidence; no activation controls. */
+.transcript-review-boundary { padding: 1.25rem; border: 1px solid currentColor; border-radius: .75rem; margin-block: 1rem; overflow-wrap: anywhere; }
+.transcript-review-boundary dl { display: grid; grid-template-columns: minmax(10rem, 1fr) 2fr; gap: .5rem 1rem; }
+.transcript-review-boundary dt { font-weight: 600; }
+.transcript-review-boundary dd { margin: 0; }
+@media (max-width: 40rem) { .transcript-review-boundary dl { grid-template-columns: 1fr; } .transcript-review-boundary dd { margin-bottom: .75rem; } }
