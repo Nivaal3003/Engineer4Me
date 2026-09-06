@@ -1,0 +1,34 @@
+import { describe, it, expect } from "vitest";
+import { createLocalArtifactManifest, LOCAL_ARTIFACT_ROLES } from "./local-runtime-artifact-manifest";
+const D = "ab".repeat(32);
+function manifestInput() { return {manifestRef:"assessment-1", engineCommit:"ab".repeat(20), modelRef:"base.en-candidate", platformRef:"cpu-reference-unqualified",
+  artifacts: LOCAL_ARTIFACT_ROLES.map((role) => ({role, artifactRef:role+"-artifact", revision:"review-1", sha256:D, bytes:1024}))}; }
+import { createLocalPilotPlan } from "./local-transcription-pilot-plan";
+import type { LocalPilotCase } from "./local-transcription-pilot-plan";
+function pilotInput() { return {planRef:"pilot-1", manifest:createLocalArtifactManifest(manifestInput()), configurationSha256:D, language:"en" as const,
+  cases: (["utterance","silence","noise","cancellation","supersession"] as const).map((kind):LocalPilotCase=>({caseId:kind+"-1",kind,inputSha256:D,inputDurationMilliseconds:1000,referenceWordCount:kind==="utterance"?10:0})),
+  maximumWallMilliseconds:2000, maximumPeakMemoryBytes:1_073_741_824, maximumWordErrorRate:0.1}; }
+import { reviewLocalPilotMeasurements } from "./local-transcription-result-review";
+import type { LocalPilotMeasurement } from "./local-transcription-result-review";
+function fixture() {const p=createLocalPilotPlan(pilotInput()); const reports:LocalPilotMeasurement[]=p.cases.map(c=>({caseId:c.caseId,inputSha256:c.inputSha256,configurationSha256:p.configurationSha256,
+ wordErrors:0,criticalSemanticErrors:0,inventedNonSpeechWords:0,wallMilliseconds:100,peakMemoryBytes:1000,
+ resultAdmittedAfterInvalidation:false,rawAudioPersisted:false,audioTransmitted:false,runtimeModelDownloadAttempted:false,runtimeClosed:true,deadlineExceeded:false}));return {p,reports};}
+describe("declared pilot result review, never an ASR benchmark",()=>{
+ it("reports no results without claiming a pass",()=>{const {p}=fixture();const r=reviewLocalPilotMeasurements(p,"declared_measurement",[]);expect(r.state).toBe("no_results");expect(r.wordErrorRate).toBeNull();expect(r.p95WallMilliseconds).toBeNull();});
+ it("reports missing cases",()=>{const {p,reports}=fixture();const r=reviewLocalPilotMeasurements(p,"declared_measurement",reports.slice(0,2));expect(r.state).toBe("incomplete");expect(r.missingCaseIds).toHaveLength(3);});
+ it("keeps scripted success separate from measured evidence",()=>{const {p,reports}=fixture();const r=reviewLocalPilotMeasurements(p,"scripted_fixture",reports);expect(r.state).toBe("scripted_criteria_met_not_measurement");expect(r.measurementsIndependentlyVerified).toBe(false);expect(r.productQualified).toBe(false);expect(r.executionAuthorized).toBe(false);});
+ it("requires independent review even for all declared successful measurements",()=>{const {p,reports}=fixture();expect(reviewLocalPilotMeasurements(p,"declared_measurement",reports).state).toBe("declared_criteria_met_independent_review_required");});
+ it("blocks one critical semantic error despite low WER",()=>{const {p,reports}=fixture();reports[0]={...reports[0]!,criticalSemanticErrors:1};const r=reviewLocalPilotMeasurements(p,"declared_measurement",reports);expect(r.state).toBe("blocked");expect(r.wordErrorRate).toBe(0);expect(r.blockingReasons).toEqual(["critical_semantic_error"]);});
+ it("blocks invented text on silence",()=>{const {p,reports}=fixture();reports[1]={...reports[1]!,inventedNonSpeechWords:1};expect(reviewLocalPilotMeasurements(p,"declared_measurement",reports).blockingReasons).toEqual(["invented_text_on_non_speech"]);});
+ it("blocks admission after cancellation",()=>{const {p,reports}=fixture();reports[3]={...reports[3]!,resultAdmittedAfterInvalidation:true};expect(reviewLocalPilotMeasurements(p,"declared_measurement",reports).state).toBe("blocked");});
+ it("rejects duplicate or unknown case rows",()=>{const {p,reports}=fixture();expect(()=>reviewLocalPilotMeasurements(p,"declared_measurement",[reports[0]!,reports[0]!])).toThrow(/duplicate/i);expect(()=>reviewLocalPilotMeasurements(p,"declared_measurement",[{...reports[0]!,caseId:"other"}])).toThrow(/identity/i);});
+ it("rejects changed input or configuration digests",()=>{const {p,reports}=fixture();for(const change of [{inputSha256:"cd".repeat(32)},{configurationSha256:"cd".repeat(32)}])expect(()=>reviewLocalPilotMeasurements(p,"declared_measurement",[{...reports[0]!,...change}])).toThrow(/identity/i);});
+ it("does not combine incomplete runs into an optimistic average",()=>{const {p,reports}=fixture();reports[0]={...reports[0]!,wordErrors:3};const r=reviewLocalPilotMeasurements(p,"declared_measurement",reports.slice(0,1));expect(r.state).toBe("blocked");expect(r.wordErrorRate).toBe(0.3);});
+ it("permits WER over one and reports it honestly",()=>{const {p,reports}=fixture();reports[0]={...reports[0]!,wordErrors:20};expect(reviewLocalPilotMeasurements(p,"declared_measurement",reports).wordErrorRate).toBe(2);});
+ it("rejects invalid counters, memory and false booleans",()=>{const {p,reports}=fixture();for(const patch of [{wordErrors:-1},{wallMilliseconds:Infinity},{peakMemoryBytes:0},{runtimeClosed:"true" as unknown as boolean}])expect(()=>reviewLocalPilotMeasurements(p,"declared_measurement",[{...reports[0]!,...patch}])).toThrow();});
+ it("blocks cleanup, privacy and download violations",()=>{const {p,reports}=fixture();for(const patch of [{runtimeClosed:false},{audioTransmitted:true},{rawAudioPersisted:true},{runtimeModelDownloadAttempted:true}]){const r=reviewLocalPilotMeasurements(p,"scripted_fixture",[{...reports[0]!,...patch}]);expect(r.state).toBe("blocked");}});
+ it("blocks exceeded latency, memory or watchdog budget",()=>{const {p,reports}=fixture();for(const patch of [{wallMilliseconds:2001},{peakMemoryBytes:1_073_741_825},{deadlineExceeded:true}])expect(reviewLocalPilotMeasurements(p,"declared_measurement",[{...reports[0]!,...patch}]).state).toBe("blocked");});
+ it("uses inclusive budgets and nearest-rank p95 without mutation",()=>{const {p,reports}=fixture();reports[0]={...reports[0]!,wordErrors:1,wallMilliseconds:2000,peakMemoryBytes:1_073_741_824};const copy=JSON.stringify(reports);const r=reviewLocalPilotMeasurements(p,"declared_measurement",reports);expect(r.state).toBe("declared_criteria_met_independent_review_required");expect(r.p95WallMilliseconds).toBe(2000);expect(JSON.stringify(reports)).toBe(copy);});
+ it("rejects non-speech WER rather than inventing denominator",()=>{const {p,reports}=fixture();reports[1]={...reports[1]!,wordErrors:1};expect(()=>reviewLocalPilotMeasurements(p,"declared_measurement",reports)).toThrow(/not defined/i);});
+ it("does not let a copied plan or unknown provenance claim qualification",()=>{const {p,reports}=fixture();expect(()=>reviewLocalPilotMeasurements({...p},"declared_measurement",reports)).toThrow(/issued/i);expect(()=>reviewLocalPilotMeasurements(p,"verified" as "declared_measurement",reports)).toThrow(/provenance/i);});
+});

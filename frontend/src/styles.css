@@ -1924,3 +1924,6 @@ a {
 .processing-evidence-boundary { border: 1px solid currentColor; border-radius: 0.5rem; padding: 1rem; margin-block: 1rem; overflow-wrap: anywhere; }
 .processing-evidence-boundary dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.4rem 1rem; }
 .processing-evidence-boundary dd { margin: 0; }
+
+.local-transcription-assessment-panel { margin-block: 1.5rem; padding: 1rem; border: 1px solid currentColor; border-radius: 0.5rem; overflow-wrap: anywhere; }
+.local-transcription-assessment-panel h2 { margin-block-start: 0; }

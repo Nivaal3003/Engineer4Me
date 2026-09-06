@@ -6,6 +6,7 @@ import {
   TranscriptReviewBoundaryPanel,
   ScriptedProcessingBoundaryPanel,
   ProcessingEvidenceBoundaryPanel,
+  LocalTranscriptionAssessmentPanel,
   ControlledAudioSampleAcquisitionProposalPanel,
   ControlledBrowserCapabilityObservationPanel,
   ControlledBrowserNavigationEvidencePanel,
@@ -72,6 +73,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
       <TranscriptReviewBoundaryPanel />
       <ScriptedProcessingBoundaryPanel />
       <ProcessingEvidenceBoundaryPanel />
+      <LocalTranscriptionAssessmentPanel />
     </div>
   );
 }
