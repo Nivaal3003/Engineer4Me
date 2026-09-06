@@ -5,6 +5,7 @@ import { CapabilityOperationPanel } from "../capability-workspace";
 import {
   TranscriptReviewBoundaryPanel,
   ScriptedProcessingBoundaryPanel,
+  ProcessingEvidenceBoundaryPanel,
   ControlledAudioSampleAcquisitionProposalPanel,
   ControlledBrowserCapabilityObservationPanel,
   ControlledBrowserNavigationEvidencePanel,
@@ -70,6 +71,7 @@ export function ProtectedWorkspace(props: ProtectedWorkspaceProps) {
           <ControlledAudioSignalPresenceEvidencePanel />
       <TranscriptReviewBoundaryPanel />
       <ScriptedProcessingBoundaryPanel />
+      <ProcessingEvidenceBoundaryPanel />
     </div>
   );
 }

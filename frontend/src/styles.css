@@ -1919,3 +1919,8 @@ a {
 .scripted-processing-boundary dt { font-weight: 600; }
 .scripted-processing-boundary dd { margin: 0; overflow-wrap: anywhere; }
 @media (max-width: 40rem) { .scripted-processing-boundary dl { grid-template-columns: minmax(0, 1fr); } }
+
+/* Source-only processing evidence boundary; no active controls. */
+.processing-evidence-boundary { border: 1px solid currentColor; border-radius: 0.5rem; padding: 1rem; margin-block: 1rem; overflow-wrap: anywhere; }
+.processing-evidence-boundary dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.4rem 1rem; }
+.processing-evidence-boundary dd { margin: 0; }

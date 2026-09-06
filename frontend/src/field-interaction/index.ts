@@ -91,3 +91,10 @@ export * from "./scripted-processing-controller";
 export * from "./scripted-result-review";
 export * from "./inert-scripted-processing-status";
 export * from "./ScriptedProcessingBoundaryPanel";
+
+export * from "./processing-candidate-scope";
+export * from "./processing-review-declaration";
+export * from "./scoped-processing-dossier";
+export * from "./processing-evidence-readiness";
+export * from "./inert-processing-evidence-status";
+export * from "./ProcessingEvidenceBoundaryPanel";
